@@ -2,61 +2,698 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard-Patch</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Körper und Training</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;700&family=Barlow:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-body{font:16px/1.55 system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;color:#12263a;background:#f4f6f8}
-h1{font-size:26px;margin:0 0 8px}
-.box{background:#fff;border:2px dashed #9fb3c4;border-radius:12px;padding:28px;text-align:center;margin:20px 0}
-button{font:inherit;padding:10px 18px;border-radius:8px;border:0;background:#12263a;color:#fff;cursor:pointer}
-ul{padding-left:20px}.ok{color:#1d7a46}.skip{color:#a05a00}.err{color:#b3261e}
+:root{--bg:#edf1f4;--panel:#fff;--ink:#12263a;--mute:#5d7184;--line:#d5dde4;--hr:#e0245e;--run:#2a7f9e;--bike:#3d8b5a;--z1:#9fc5d6;--z2:#5aa4c0;--z3:#f2b84b;--z4:#ee7b3c;--z5:#e0245e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a24;--panel:#172633;--ink:#e6eef5;--mute:#8da2b4;--line:#2a3d4d}}
+:root[data-theme="dark"]{--bg:#0f1a24;--panel:#172633;--ink:#e6eef5;--mute:#8da2b4;--line:#2a3d4d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 Barlow,system-ui,sans-serif}
+h1,h2,.num{font-family:"Barlow Semi Condensed","Arial Narrow",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1{font-size:30px;margin:0;font-weight:700}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--mute)}
+button,input{font:inherit}
+.btn,.tabs button,.rg button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:7px 13px;cursor:pointer}
+.btn{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:500}
+.tabs{display:flex;gap:6px;margin:0 0 16px;flex-wrap:wrap}
+.rg{display:inline-flex;gap:4px}
+[aria-selected=true],[aria-pressed=true].rb{background:var(--ink)!important;color:var(--bg)!important;border-color:var(--ink)!important}
+button:focus-visible,input:focus-visible{outline:3px solid var(--hr);outline-offset:2px}
+input[type=number]{width:72px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.note{background:var(--panel);border-left:4px solid var(--hr);padding:10px 14px;border-radius:6px;margin-bottom:16px;color:var(--mute)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:16px}
+.card{text-align:left;border:1px solid var(--line);background:var(--panel);color:inherit;border-radius:12px;padding:12px;cursor:pointer}
+.card[aria-pressed=true]{border-color:var(--hr);box-shadow:0 0 0 1px var(--hr)}
+.card .num{font-size:32px;font-weight:700;line-height:1.1}
+.card svg{margin-top:6px}
+small,.lab{color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat .num{font-size:34px;font-weight:700;line-height:1.1}
+.main{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
+h2{font-size:19px;margin:0 0 10px;font-weight:700}
+.item{display:flex;gap:12px;align-items:center;padding:10px 8px;border-radius:8px;cursor:pointer;border:0;background:none;width:100%;text-align:left;color:inherit}
+.item:hover{background:var(--bg)}
+.item[aria-current=true]{background:var(--bg);box-shadow:inset 3px 0 0 var(--hr)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.item .t{flex:1;min-width:0}
+.item .t b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .r{text-align:right;font-family:"Barlow Semi Condensed",sans-serif;font-weight:500}
+.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 16px}
+.kv .num{font-size:26px;font-weight:700}
+.chart{overflow-x:auto}
+svg{display:block;width:100%;height:auto}
+.zones{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:8px 0 6px}
+.zl{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}th{font-weight:500;color:var(--mute)}.bad{color:var(--hr);font-weight:500}.good{color:var(--bike);font-weight:500}#cmp ul{margin:12px 0 0;padding-left:20px}
+@media (max-width:760px){.stats,.kv{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}}
+</style>
+<style>
+/* Liquid Glass + Jahreszeiten */
+:root{--s1:#f4a261;--s2:#e9c46a;--s3:#d98e73;--base:#eef2f6;--glass:rgba(255,255,255,.42);--glass-hi:rgba(255,255,255,.78);--glass-edge:rgba(255,255,255,.7);--shadow:rgba(31,45,61,.16);--blob:.85}
+[data-season=fruehling]{--s1:#a8e0b8;--s2:#ffcfe0;--s3:#fff0a8}
+[data-season=sommer]{--s1:#7cc4ec;--s2:#ffe08a;--s3:#ffab9a}
+[data-season=herbst]{--s1:#f4a261;--s2:#e9c46a;--s3:#d98e73}
+[data-season=winter]{--s1:#b3d9fb;--s2:#cdb4db;--s3:#dfe9f3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--base:#0b1520;--glass:rgba(26,40,56,.5);--glass-hi:rgba(255,255,255,.13);--glass-edge:rgba(255,255,255,.2);--shadow:rgba(0,0,0,.5);--blob:.58}}
+:root[data-theme="dark"]{--base:#0b1520;--glass:rgba(26,40,56,.5);--glass-hi:rgba(255,255,255,.13);--glass-edge:rgba(255,255,255,.2);--shadow:rgba(0,0,0,.5);--blob:.58}
+body{background:var(--base);min-height:100vh}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;opacity:var(--blob);background:radial-gradient(38% 38% at 18% 22%,var(--s1) 0,transparent 72%),radial-gradient(34% 34% at 82% 18%,var(--s2) 0,transparent 72%),radial-gradient(44% 44% at 66% 86%,var(--s3) 0,transparent 72%),radial-gradient(30% 30% at 12% 82%,var(--s2) 0,transparent 72%);animation:drift 45s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate3d(-3%,-2%,0) scale(1)}to{transform:translate3d(4%,3%,0) scale(1.1)}}
+.panel,.card,.note{background:linear-gradient(135deg,var(--glass-hi),var(--glass) 55%);-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);border:1px solid var(--glass-edge);border-radius:26px;box-shadow:inset 0 1px 0 var(--glass-hi),inset 0 -1px 0 rgba(255,255,255,.1),0 12px 36px var(--shadow)}
+.note{border-left:4px solid var(--hr);border-radius:18px}
+.card{border-radius:22px;transition:transform .25s,box-shadow .25s}
+.card:hover{transform:translateY(-2px)}
+.card[aria-pressed=true]{border-color:var(--hr);box-shadow:inset 0 1px 0 var(--glass-hi),0 0 0 1.5px var(--hr),0 12px 36px var(--shadow)}
+.tabs button,.rg button,.gl{border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(1.5);backdrop-filter:blur(14px) saturate(1.5);border:1px solid var(--glass-edge);box-shadow:inset 0 1px 0 var(--glass-hi);color:var(--ink);padding:7px 14px;cursor:pointer}
+.btn{border-radius:999px;box-shadow:0 6px 18px var(--shadow)}
+input[type=number]{background:var(--glass);border:1px solid var(--glass-edge);border-radius:12px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.item{border-radius:16px}
+.item:hover{background:var(--glass)}
+.item[aria-current=true]{background:var(--glass-hi);box-shadow:inset 3px 0 0 var(--hr)}
+.zones,.zones span{border-radius:999px}
+.sec{margin-top:16px}.goals{display:flex;gap:28px;flex-wrap:wrap}.goals>div{min-width:130px}.gi{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;color:var(--mute)}.gi input{width:80px}select,textarea{font:inherit;color:var(--ink);background:var(--glass);border:1px solid var(--glass-edge);border-radius:14px;padding:8px 12px}textarea{width:100%;min-height:72px;resize:vertical}.ans{white-space:pre-wrap;margin-top:12px}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.panel,.card,.note{background:var(--panel)}}
+@media (prefers-reduced-motion:reduce){body::before{animation:none}.card{transition:none}}
+input[type=text],input[type=date]{font:inherit;color:var(--ink);background:var(--glass);border:1px solid var(--glass-edge);border-radius:12px;padding:6px 10px}
+.gl[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+@media (max-width:600px){.wrap{padding:12px 10px 36px}h1{font-size:24px}header{gap:8px}.tools{width:100%;gap:8px}.tabs,.rg{overflow-x:auto;flex-wrap:nowrap;max-width:100%}.tabs button,.rg button{flex:none}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.card{padding:10px}.card .num{font-size:24px}.panel{padding:12px;border-radius:20px}.kv{grid-template-columns:repeat(2,1fr)}.goals{gap:12px;justify-content:space-around}table{font-size:13px}th,td{padding:6px 4px}}
 </style>
 </head>
 <body>
-<h1>Dashboard-Patch</h1>
-<p>Wähle deine Datei <b>Körper und Training.html</b> aus. Das Werkzeug baut die Änderungen ein und lädt die neue Datei herunter. Deine Originaldatei bleibt unverändert, nichts wird hochgeladen.</p>
-<div class="box"><input type="file" id="f" accept=".html"></div>
-<div id="out" aria-live="polite"></div>
+<div class="wrap">
+<header>
+ <h1>Körper und Training</h1>
+ <div class="tools">
+  <label>Max. Puls <input id="mhr" type="number" min="120" max="230" value="190"></label>
+  <button class="gl" id="seas" type="button" title="Jahreszeit wechseln"></button>
+  <button class="gl" id="dir" type="button">Ordner verbinden</button>
+  <button class="btn" id="imp">Garmin-Daten importieren</button>
+  <input id="file" type="file" multiple accept=".zip,.json,.gpx,.tcx" hidden>
+ </div>
+</header>
+<div id="note"></div>
+<div class="tabs" role="tablist">
+ <button role="tab" data-t="ov" aria-selected="true">Gesundheit</button>
+ <button role="tab" data-t="ac" aria-selected="false">Läufe und Touren</button>
+ <button role="tab" data-t="fi" aria-selected="false">Fitness und Belastung</button>
+ <button role="tab" data-t="rv" aria-selected="false">Rückblick</button>
+</div>
+<div class="rg" id="rg" style="margin-bottom:12px"></div>
+<div id="ov">
+ <section class="panel" id="today" style="margin-bottom:16px"></section>
+ <div class="cards" id="cards"></div>
+ <section class="panel" id="big"></section>
+ <section class="panel" id="cmp" style="margin-top:16px"></section>
+ <section class="panel sec" id="goal"></section>
+ <section class="panel sec" id="slp"></section>
+ <section class="panel sec" id="cor"></section>
+ <section class="panel sec" id="diary"></section>
+ <section class="panel sec" id="gap"></section>
+</div>
+<div id="ac" hidden>
+ <section class="panel" id="man" style="margin-bottom:16px"></section>
+ <div class="stats panel" id="stats"></div>
+ <div class="main">
+  <section class="panel"><h2>Aktivitäten</h2><div class="rg" id="ft" style="display:flex;flex-wrap:wrap;margin-bottom:8px"></div><div id="list"></div></section>
+  <div>
+   <section class="panel" style="margin-bottom:16px"><h2>Kilometer pro Woche</h2><div id="weeks"></div></section>
+   <section class="panel" id="detail"></section>
+  </div>
+ </div>
+ <section class="panel sec" id="eff"></section>
+ <section class="panel sec" id="zwk"></section>
+ <section class="panel sec" id="cal"></section>
+ <section class="panel sec" id="rt"></section>
+</div>
+<div id="fi" hidden>
+ <div class="cards" id="cards2"></div>
+ <section class="panel" id="big2"></section>
+ <section class="panel sec" id="race"></section>
+ <section class="panel sec" id="goalt"></section>
+ <section class="panel sec" id="rec"></section>
+ <section class="panel sec" id="tst"></section>
+</div>
+<div id="rv" hidden>
+ <section class="panel" id="recap"></section>
+ <section class="panel sec" id="ach"></section>
+ <section class="panel sec" id="ask" hidden><h2>Frag dein Dashboard</h2><div class="lab" style="margin-bottom:8px">Claude beantwortet Fragen zu deinen Daten. Dabei wird eine Zusammenfassung deiner letzten Wochen (Tageswerte und Aktivitäten) an Claude gesendet, und es zählt auf dein Claude-Kontingent. Beim ersten Mal fragt dich der Browser um Erlaubnis.</div><textarea id="q" placeholder="Zum Beispiel: Wie war mein Schlaf diese Woche im Vergleich zum Monat davor?"></textarea><div class="gi"><button class="btn" id="askbtn" type="button">Fragen</button><button class="gl" type="button" data-q="Wie war meine Erholung in den letzten 7 Tagen?">Erholung</button><button class="gl" type="button" data-q="Wie hat sich meine Fitness in den letzten Monaten entwickelt?">Fitness-Entwicklung</button><button class="gl" type="button" data-q="Was fällt dir an meinem Schlaf auf?">Schlaf</button></div><div class="ans" id="ans" aria-live="polite"></div></section>
+ <section class="panel sec" id="plan" hidden><h2>Wochenplan-Vorschlag</h2><div class="lab" style="margin-bottom:8px">Claude schlägt anhand deiner letzten Wochen einen Plan für die nächsten 7 Tage vor. Es wird, wie bei „Frag dein Dashboard", eine Zusammenfassung deiner Daten an Claude gesendet. Das ist ein Vorschlag, keine Trainingsberatung.</div><textarea id="pc" placeholder="Deine Rahmenbedingungen, z. B. 3 Einheiten pro Woche, Wochenende frei"></textarea><div class="gi"><button class="btn" id="planbtn" type="button">Plan vorschlagen</button></div><div class="ans" id="planout" aria-live="polite"></div></section>
+ <section class="panel sec" id="bkp"><h2>Daten sichern</h2><div class="lab">Deine Daten liegen nur in diesem Browser. Mit einer Sicherung kannst du sie speichern und später oder in einem anderen Browser wieder laden (die Sicherungsdatei einfach auf die Seite ziehen oder importieren).</div><div class="gi"><button class="btn" id="bksave" type="button">Sicherung speichern</button><button class="gl" id="bkload" type="button">Sicherung laden</button><button class="gl" id="bkdel" type="button">Alle Daten löschen</button></div><div class="ans" id="bkmsg" aria-live="polite"></div><textarea id="bkta" readonly hidden rows="6" aria-label="Sicherungstext"></textarea><details style="margin-top:10px"><summary>Alternativ: Sicherung als Text einfügen</summary><textarea id="bkpaste" placeholder="Sicherungstext hier einfügen"></textarea><div class="gi"><button class="gl" id="bkpastebtn" type="button">Aus Text laden</button></div></details></section>
+</div>
+</div>
+<script type="application/json" id="gd-embed"><!--GD_EMBED--></script>
 <script>
-const out=document.getElementById('out');
-function patch(t){
- const log=[];let s=t;
- const step=(name,fn)=>{const r=fn();log.push([name,r])};
- const rep=(a,b)=>{if(!s.includes(a))return false;s=s.split(a).join(b);return true};
- step('Abschnitt „Frag dein Dashboard“ ausgeblendet',()=>{
-  if(s.includes('id="ask" hidden'))return'schon erledigt';
-  return rep('<section class="panel sec" id="ask">','<section class="panel sec" id="ask" hidden>')?'ok':'nicht gefunden'});
- step('Abschnitt „Wochenplan“ ausgeblendet',()=>{
-  if(s.includes('id="plan" hidden'))return'schon erledigt';
-  return rep('<section class="panel sec" id="plan">','<section class="panel sec" id="plan" hidden>')?'ok':'nicht gefunden'});
- step('Knopf „Alle Daten löschen“ eingefügt',()=>{
-  if(s.includes('id="bkdel"'))return'schon erledigt';
-  return rep('<button class="gl" id="bkload" type="button">Sicherung laden</button>','<button class="gl" id="bkload" type="button">Sicherung laden</button><button class="gl" id="bkdel" type="button">Alle Daten löschen</button>')?'ok':'nicht gefunden'});
- step('Löschfunktion eingefügt',()=>{
-  if(s.includes("$('#bkdel').onclick"))return'schon erledigt';
-  const fn="$('#bkdel').onclick=()=>{\n if(!confirm('Alle in diesem Browser gespeicherten Daten löschen? Das lässt sich nicht rückgängig machen. Mach vorher eine Sicherung, wenn du sie noch brauchst.'))return;\n try{localStorage.clear();indexedDB.deleteDatabase('gd')}catch(e){}\n location.reload();\n};\n";
-  const k="$('#planbtn').onclick=plan;";
-  if(!s.includes(k))return'nicht gefunden';
-  s=s.split(k).join(fn+k);return'ok'});
- step('Tab umbenannt in „Rückblick“',()=>{
-  if(!s.includes('Rückblick und Fragen'))return'schon erledigt';
-  return rep('Rückblick und Fragen','Rückblick')?'ok':'nicht gefunden'});
- step('Hinweis zum Speichern im Browser ergänzt',()=>{
-  const a='Alles bleibt in deinem Browser.';
-  if(s.includes('Du kannst sie unter „Daten sichern“ löschen'))return'schon erledigt';
-  return rep(a,'Alles bleibt in deinem Browser und wird nicht an einen Server gesendet. Du kannst die Daten unter „Rückblick“ im Bereich „Daten sichern“ mit „Alle Daten löschen“ entfernen.')?'ok':'nicht gefunden'});
- return{s,log};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let acts=[],days={},sel=0,maxHR=190,demo=false,rng=30,mt={ov:'sleep',fi:'endu'},note='',ft='Alle',G={steps:10000,sleep:7.5,km:20},recs=[],BD={w:[]},ZN=null,rvp='',rvItems=[],rvTitle='',tags={},dsel='';
+try{acts=JSON.parse(localStorage.getItem('acts')||'[]');days=JSON.parse(localStorage.getItem('days')||'{}');maxHR=+localStorage.getItem('mhr')||190;G=Object.assign(G,JSON.parse(localStorage.getItem('goals')||'{}'));recs=JSON.parse(localStorage.getItem('recs')||'[]');BD=JSON.parse(localStorage.getItem('body')||'null')||BD;ZN=JSON.parse(localStorage.getItem('zn')||'null');tags=JSON.parse(localStorage.getItem('tags')||'{}')}catch(e){}
+if(!acts.length&&!Object.keys(days).length){makeDemo();demo=true}
+$('#mhr').value=maxHR;
+const M=[
+{k:'sleep',n:'Schlaf',u:' h',d:1,c:'var(--run)'},
+{k:'sscore',n:'Schlaf-Score',u:'',d:0,c:'var(--run)'},
+{k:'ready',n:'Trainingsbereitschaft',u:'',d:0,c:'var(--bike)'},
+{k:'rhr',n:'Ruhepuls',u:' bpm',d:0,c:'var(--hr)'},
+{k:'hrv',n:'HRV',u:' ms',d:0,c:'var(--bike)'},
+{k:'vo2',n:'VO2max',u:'',d:1,c:'var(--z5)'},
+{k:'stress',n:'Stress',u:'',d:0,c:'var(--z4)'},
+{k:'bb',n:'Body Battery Maximum',u:'',d:0,c:'var(--z3)'},
+{k:'bblow',n:'Body Battery Tiefpunkt',u:'',d:0,c:'var(--z4)'},
+{k:'steps',n:'Schritte',u:'',d:0,c:'var(--z2)'}];
+const FM=[{k:'endu',n:'Ausdauer-Score',u:'',d:0,c:'var(--run)'},{k:'hill',n:'Berg-Score',u:'',d:0,c:'var(--bike)'},{k:'chronic',n:'Chronische Belastung',u:'',d:0,c:'var(--z2)'},{k:'acute',n:'Akute Belastung',u:'',d:0,c:'var(--z4)'},{k:'acwr',n:'Belastungsverhältnis',u:'',d:2,c:'var(--hr)'},{k:'wload',n:'Wochenbelastung (Garmin)',u:'',d:0,c:'var(--z3)'}];
+const KEYS={wload:['weeklyTrainingLoadSum'],chronic:['dailyTrainingLoadChronic'],r5:['raceTime5K'],r10:['raceTime10K'],rh:['raceTimeHalf'],rm:['raceTimeMarathon'],rhr:['restingHeartRate'],steps:['totalSteps'],stress:['averageStressLevel'],bb:['bodyBatteryHighestValue'],hrv:['lastNightAvg','avgOvernightHrv'],vo2:['vo2MaxValue','vO2MaxValue']};
+
+function makeDemo(){
+ let a=7;const r=()=>(a=(a*16807)%2147483647)/2147483647;
+ for(let i=119;i>=0;i--){const d=new Date(Date.now()-(i+1)*864e5).toISOString().slice(0,10),w=Math.sin(i/6);
+  days[d]={sleep:7+w*.6+r()*.8-.4,deep:1.1+r()*.4,rem:1.5+r()*.5,rhr:Math.round(52-(119-i)/60+w*2+r()*2),hrv:Math.round(58+w*7+r()*6),stress:Math.round(28+r()*14),steps:Math.round(6500+r()*6000),bb:Math.round(70+r()*25)};
+  if(i%10==0)days[d].vo2=+(50+(120-i)/40+r()).toFixed(1)}
+ for(let i=0;i<16;i++){
+  const bike=i%3===1,d=new Date(Date.now()-(Math.floor(i*2.2)+1)*864e5);d.setHours(18,0,0,0);
+  const km=bike?18+r()*22:5+r()*8,s=bike?km/(16+r()*4)*3600:km*(5.4+r()*.8)*60,b=bike?135:150,hr=[];
+  for(let k=0;k<160;k++)hr.push(Math.round(b+Math.sin(k/9)*9+(k/160)*14+r()*6+(bike&&k%40<8?18:0)));
+  acts.push(mk(bike?'Abendrunde Trail':'Lockerer Dauerlauf',bike?'Mountainbike':'Laufen',d,km,s,hr));
+ }
 }
-document.getElementById('f').onchange=async e=>{
- const file=e.target.files[0];if(!file)return;
- const text=await file.text();
- if(!text.includes('id="gd-embed"')){out.innerHTML='<p class="err">Das sieht nicht nach deinem Dashboard aus. Bitte wähle die Datei „Körper und Training.html“.</p>';return}
- const {s,log}=patch(text);
- out.innerHTML='<ul>'+log.map(([n,r])=>`<li class="${r=='ok'?'ok':r=='nicht gefunden'?'err':'skip'}">${n}: ${r}</li>`).join('')+'</ul><button id="dl">Neue Datei herunterladen</button>';
- document.getElementById('dl').onclick=()=>{
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/html'}));a.download=file.name;document.body.appendChild(a);a.click();a.remove();
- };
+function mk(n,t,d,km,s,hr,avg,max){
+ hr=hr.filter(v=>v>30&&v<220);const step=Math.max(1,Math.ceil(hr.length/240)),h=hr.filter((_,i)=>i%step===0);
+ if(hr.length){avg=Math.round(hr.reduce((p,c)=>p+c,0)/hr.length);max=Math.max(...hr)}
+ return{n,t,d:new Date(d).toISOString(),km:+(+km).toFixed(2),s:Math.round(s),avg:avg||0,max:max>210?0:(max||0),hr:h};
+}
+function typ(x){x=(x||'').toLowerCase();if(/run|lauf/.test(x))return'Laufen';if(/bik|cycl|rad|mountain|mtb/.test(x))return'Mountainbike';if(/soccer|fu(ß|ss)ball|football/.test(x))return'Fußball';if(/hik|wander/.test(x))return'Wandern';if(/walk|geh/.test(x))return'Gehen';return'Aktivität'}
+const rad=x=>x*Math.PI/180;
+function hav(a,b,c,d){const R=6371,dl=rad(c-a),dn=rad(d-b),q=Math.sin(dl/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
+
+/* ---------- Import ---------- */
+function parseGpx(x,fn){
+ let km=0,p=null,t0=null,t1=null;const hr=[],all=[];
+ for(const e of x.getElementsByTagName('trkpt')){
+  const la=+e.getAttribute('lat'),lo=+e.getAttribute('lon');if(p)km+=hav(p[0],p[1],la,lo);p=[la,lo];all.push(p);
+  const h=e.getElementsByTagNameNS('*','hr')[0];if(h)hr.push(+h.textContent);
+  const tm=e.getElementsByTagName('time')[0];if(tm){const d=new Date(tm.textContent);t0=t0||d;t1=d}
+ }
+ if(!t0)return null;
+ const nm=x.getElementsByTagName('name')[0],ty=x.getElementsByTagName('type')[0];
+ const a=mk(nm?nm.textContent:fn,typ(ty?ty.textContent:fn),t0,km,(t1-t0)/1000,hr),k=Math.max(1,Math.ceil(all.length/150)),ll=[];all.forEach((q,i)=>{if(i%k==0)ll.push([+q[0].toFixed(5),+q[1].toFixed(5)])});if(ll.length>5){a.ll=ll;a.sl=ll[0][0];a.sn=ll[0][1]}return a;
+}
+function parseTcx(x,fn){
+ const act=x.getElementsByTagName('Activity')[0];if(!act)return null;
+ let km=0,t0=null,t1=null;const hr=[];
+ for(const e of x.getElementsByTagName('Trackpoint')){
+  const tm=e.getElementsByTagName('Time')[0],ds=e.getElementsByTagName('DistanceMeters')[0],h=e.getElementsByTagName('HeartRateBpm')[0];
+  if(tm){const d=new Date(tm.textContent);t0=t0||d;t1=d}
+  if(ds)km=+ds.textContent/1000;
+  if(h){const v=h.getElementsByTagName('Value')[0];if(v)hr.push(+v.textContent)}
+ }
+ return t0?mk(fn,typ(act.getAttribute('Sport')),t0,km,(t1-t0)/1000,hr):null;
+}
+function actFrom(o){
+ const t=o.startTimeGmt||o.beginTimestamp,tp=o.activityType&&typeof o.activityType=='object'?o.activityType.typeKey:o.activityType;
+ const x=+o.distance||0,dur=+o.duration||0;let km=0,s=0;
+ for(const[a,b]of[[1e5,1e3],[1e3,1],[1e3,1e3],[1e5,1]]){const k=x/a,ss=dur/b;if(k>0&&ss>0){const v=k/(ss/3600);if(v>2&&v<70){km=k;s=ss;break}}}
+ if(!s)s=dur>1e5?dur/1000:dur;
+ const a=mk(o.name||'Aktivität',typ(tp),t,km,s,[],Math.round(+o.avgHr||0),Math.round(+o.maxHr||0));
+ a.z=[1,2,3,4,5].map(i=>Math.round((+o['hrTimeInZone_'+i]||0)/1000));a.el=Math.round((+o.elevationGain||0)/100);a.te=+(+o.aerobicTrainingEffect||0).toFixed(1);a.sl=+o.startLatitude||0;a.sn=+o.startLongitude||0;return a;
+}
+function scan(o,dd,add,cd){
+ if(Array.isArray(o)){o.forEach(x=>scan(x,dd,add,cd));return}
+ if(!o||typeof o!='object')return;
+ if(o.zone1Floor!==undefined&&(o.sport==='RUNNING'||!add.zn)){add.zn=[o.zone1Floor,o.zone2Floor,o.zone3Floor,o.zone4Floor,o.zone5Floor];add.mx=o.maxHeartRateUsed}
+ if(o.weight&&typeof o.weight=='object'&&o.weight.weight>0){add.bd=add.bd||{w:[]};add.bd.w.push([String(o.weight.timestampGMT).slice(0,10),o.weight.weight/1000])}
+ if(o.lactateThresholdHearRate>0){add.bd=add.bd||{w:[]};add.bd.lt=o.lactateThresholdHearRate;if(o.height)add.bd.h=o.height}
+ if(o.activityId!==undefined&&(o.startTimeGmt||o.beginTimestamp)){add.push(actFrom(o));return}
+ if(Array.isArray(o.personalRecords)){add.pr=(add.pr||[]).concat(o.personalRecords.filter(x=>x.current));return}
+ const dt=o.calendarDate||o.summaryDate||o.date;
+ if(typeof dt=='number'&&dt>1e12)cd=new Date(dt).toISOString().slice(0,10);else if(typeof dt=='string'&&/^\d{4}-\d\d-\d\d/.test(dt))cd=dt.slice(0,10);
+ if(cd){
+  const r=dd[cd]||(dd[cd]={}),num=x=>typeof x=='number'&&x>0?x:null,put=(k,v)=>{if(v!=null&&r[k]==null)r[k]=v};
+  for(const k in KEYS)for(const al of KEYS[k]){const v=num(o[al]);if(v!=null){if(k=='vo2'){if(!o.sport||o.sport=='RUNNING')r.vo2=Math.max(r.vo2||0,v)}else put(k,v);break}}
+  const dp=num(o.deepSleepSeconds),li=num(o.lightSleepSeconds),rm=num(o.remSleepSeconds);
+  if((dp||li||rm)&&r.sleep==null){r.sleep=((dp||0)+(li||0)+(rm||0))/3600;if(dp)r.deep=dp/3600;if(rm)r.rem=rm/3600}
+  if((dp||li||rm)&&o.sleepStartTimestampGMT!==undefined&&o.sleepEndTimestampGMT!==undefined&&r.ss==null){r.ss=o.sleepStartTimestampGMT;r.se=o.sleepEndTimestampGMT}
+  if(o.bodyBatteryStatType=='HIGHEST')put('bb',num(o.statsValue));
+  if(o.bodyBatteryStatType=='LOWEST')put('bblow',num(o.statsValue));
+  if(o.type=='HRV')put('hrv',num(o.value));
+  if(o.enduranceScoreContributor)put('endu',num(o.overallScore));else if(o.hillScoreClassificationId!==undefined)put('hill',num(o.overallScore));else if(o.overallScore!==undefined)put('sscore',num(o.overallScore));
+  if(o.feedbackLong!==undefined)put('ready',num(o.score));
+  if(typeof o.dailyTrainingLoadAcute=='number'&&r.acute==null)r.acute=o.dailyTrainingLoadAcute;
+  if(typeof o.dailyAcuteChronicWorkloadRatio=='number'&&r.acwr==null)r.acwr=o.dailyAcuteChronicWorkloadRatio;
+  if(typeof o.trainingStatus=='string'&&r.tstat==null)r.tstat=o.trainingStatus;
+ }
+ for(const k in o){const v=o[k];if(v&&typeof v=='object')scan(v,dd,add,cd)}
+}
+async function load(files){
+ const add=[],dd={},skip=[],bk=[];let nf=0;
+ $('#note').innerHTML='<div class="note">Dateien werden gelesen, das kann bei großen Exporten etwas dauern.</div>';
+ for(const f of files){
+  const ext=f.name.split('.').pop().toLowerCase();
+  try{
+   if(ext=='zip'){
+    if(!window.JSZip){skip.push(f.name);continue}
+    const z=await JSZip.loadAsync(f);
+    for(const nm in z.files){const en=z.files[nm];
+     if(en.dir||!/\.json$/i.test(nm)||!/sleep|uds|maxmet|hrv|summarizedactivities|readiness|healthstatus|acutetrainingload|endurancescore|hillscore|racepred|personalrecord|traininghistory|userbiometrics|heartratezones/i.test(nm))continue;
+     try{scan(JSON.parse(await en.async('string')),dd,add);nf++}catch(e){skip.push(nm.split('/').pop())}}
+   }else if(ext=='json'){const j=JSON.parse(await f.text());if(j&&j.gdBackup){bk.push(j);nf++}else{scan(j,dd,add);nf++}}
+   else{const x=new DOMParser().parseFromString(await f.text(),'text/xml'),fn=f.name.replace(/\.\w+$/,''),a=ext=='gpx'?parseGpx(x,fn):parseTcx(x,fn);if(a){add.push(a);nf++}else skip.push(f.name)}
+  }catch(e){skip.push(f.name)}
+ }
+ for(const j of bk){for(const d in j.days||{})dd[d]=Object.assign(dd[d]||{},j.days[d]);add.push(...(j.acts||[]));if(j.recs&&j.recs.length)add.pr=j.recs;if(j.body)add.bd=j.body;if(j.zn)add.zn=j.zn;if(j.mhr)add.mx=j.mhr;Object.assign(G,j.goals||{});Object.assign(tags,j.tags||{})}
+ const dk=Object.keys(dd).filter(k=>Object.keys(dd[k]).length);
+ if(!dk.length&&!add.length){note='<div class="note">In den Dateien wurden keine Gesundheitswerte oder Aktivitäten erkannt'+(skip.length?' (nicht lesbar: '+esc(skip.slice(0,4).join(', '))+')':'')+'. Schick mir eine Beispieldatei, dann passe ich den Import an.</div>';render();return}
+ if(add.pr)recs=add.pr.map(x=>({personalRecordType:x.personalRecordType,value:x.value,prStartTimeGMT:x.prStartTimeGMT}));
+ if(add.zn){ZN=add.zn;if(add.mx){maxHR=add.mx;$('#mhr').value=maxHR}}
+ if(add.bd){const m=new Map((BD.w||[]).map(x=>[x[0],x[1]]));(add.bd.w||[]).forEach(x=>m.set(x[0],x[1]));BD={w:[...m].sort((a,b)=>a[0]<b[0]?-1:1),lt:add.bd.lt||BD.lt,h:add.bd.h||BD.h}}
+ if(demo){acts=acts.filter(a=>a.m);days={};demo=false}
+ dk.forEach(k=>days[k]=Object.assign(days[k]||{},dd[k]));
+ const seen=new Map(acts.map(a=>[a.d.slice(0,16)+'|'+a.km,a]));add.forEach(a=>seen.set(a.d.slice(0,16)+'|'+a.km,a));
+ acts=[...seen.values()].sort((x,y)=>new Date(y.d)-new Date(x.d));sel=0;
+ const c=k=>dk.filter(d=>dd[d][k]!=null).length;
+ note=`<div class="note">Gelesen: ${dk.length} Tage (Schlaf ${c('sleep')}, Ruhepuls ${c('rhr')}, HRV ${c('hrv')}, VO2max ${c('vo2')}, Stress ${c('stress')}, Schritte ${c('steps')}) und ${add.length} Aktivitäten.${skip.length?' Nicht lesbar: '+esc(skip.slice(0,4).join(', '))+'.':''}</div>`;
+ try{localStorage.setItem('tags',JSON.stringify(tags));localStorage.setItem('body',JSON.stringify(BD));localStorage.setItem('zn',JSON.stringify(ZN));localStorage.setItem('mhr',maxHR);localStorage.setItem('goals',JSON.stringify(G));localStorage.setItem('recs',JSON.stringify(recs));localStorage.setItem('days',JSON.stringify(days));localStorage.setItem('acts',JSON.stringify(acts.map((a,i)=>i<150?a:{...a,hr:[]})))}catch(e){}
+ render();
+}
+
+/* ---------- Gesundheit ---------- */
+const dates=()=>Object.keys(days).sort();
+function ser(k,n){
+ const A=dates(),end=new Date((A[A.length-1]||new Date().toISOString().slice(0,10))+'T12:00:00Z'),d=[],v=[];
+ for(let i=n-1;i>=0;i--){const x=new Date(end-i*864e5).toISOString().slice(0,10);d.push(x);v.push(days[x]&&days[x][k]!=null?days[x][k]:null)}
+ if(k=='vo2'){let l=null;for(let j=A.length-1;j>=0;j--)if(A[j]<d[0]&&days[A[j]].vo2){l=days[A[j]].vo2;break}
+  for(let i=0;i<n;i++){if(v[i]==null)v[i]=l;else l=v[i]}}
+ return{d,v};
+}
+const nn=a=>a.filter(x=>x!=null);
+const avg=a=>{a=nn(a);return a.length?a.reduce((p,c)=>p+c,0)/a.length:null};
+const last=a=>{a=nn(a);return a.length?a[a.length-1]:null};
+const f=(v,d)=>v==null?'–':(+v).toLocaleString('de-AT',{maximumFractionDigits:d,minimumFractionDigits:d});
+const fd=x=>x.slice(8)+'.'+x.slice(5,7)+'.';
+function line(v,w,h,c,ax,dts){
+ const a=nn(v);if(a.length<2)return'<p class="lab">Zu wenig Daten</p>';
+ let lo=Math.min(...a),hi=Math.max(...a);if(lo==hi){lo-=1;hi+=1}const pd=(hi-lo)*.1;lo-=pd;hi+=pd;
+ const L=ax?52:2,R=ax?10:2,T=ax?10:3,B=ax?24:3,X=i=>L+i/(v.length-1)*(w-L-R),Y=x=>h-B-(x-lo)/(hi-lo)*(h-T-B);
+ let p='',pen=0;v.forEach((x,i)=>{if(x==null){pen=0;return}p+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(x).toFixed(1);pen=1});
+ let g='';
+ if(ax){[lo+pd,(lo+hi)/2,hi-pd].forEach(t=>g+=`<line x1="${L}" x2="${w-R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(t)+4}" text-anchor="end" font-size="12" fill="var(--mute)">${hi-lo>20?Math.round(t).toLocaleString('de-AT'):(Math.round(t*10)/10).toLocaleString('de-AT')}</text>`);
+  g+=`<text x="${L}" y="${h-6}" font-size="12" fill="var(--mute)">${fd(dts[0])}</text><text x="${w-R}" y="${h-6}" text-anchor="end" font-size="12" fill="var(--mute)">${fd(dts[dts.length-1])}</text>`}
+ return`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Verlauf">${g}<path d="${p}" fill="none" stroke="${c}" stroke-width="${ax?2.2:1.8}" stroke-linejoin="round"/></svg>`;
+}
+function cards(list,ce,be,key){
+ if(!dates().length){$(ce).innerHTML='';$(be).innerHTML='<p class="lab">Noch keine Gesundheitsdaten. Importiere dein Garmin-Export-ZIP oder die JSON-Dateien daraus.</p>';return}
+ const has=m=>nn(ser(m.k,rng).v).length>0;
+ let m=list.find(x=>x.k==mt[key]);if(!m||!has(m)){m=list.find(has);if(m)mt[key]=m.k}
+ $(ce).innerHTML=list.map(m=>{
+  const s=ser(m.k,rng*2),cur=s.v.slice(rng),pre=s.v.slice(0,rng),vo=m.k=='vo2';
+  if(!nn(cur).length)return'';
+  const v=vo?last(cur):avg(cur),pv=vo?last(pre):avg(pre);
+  let sub=pv!=null&&v!=null?`${v>=pv?'+':'−'}${f(Math.abs(v-pv),m.d)} gegenüber davor`:'kein Vergleich';
+  if(m.k=='sleep'){const dp=avg(ser('deep',rng).v),rm=avg(ser('rem',rng).v);if(dp!=null&&rm!=null)sub=`Tief ${f(dp,1)} h, REM ${f(rm,1)} h`}
+  return`<button class="card" data-k="${m.k}" aria-pressed="${m.k==mt[key]}"><small>${m.n}${vo?', zuletzt':', Ø '+rng+' Tage'}</small><div class="num">${f(v,m.d)}${m.u}</div><small>${sub}</small>${line(cur,160,44,m.c,0)}</button>`}).join('');
+ if(!m||!has(m)){$(be).innerHTML='<p class="lab">Für diesen Bereich liegen keine Daten vor.</p>';return}
+ const s=ser(m.k,rng),a=nn(s.v);
+ $(be).innerHTML=`<h2>${m.n}, letzte ${rng} Tage</h2>${line(s.v,600,210,m.c,1,s.d)}<div class="lab">Ø ${f(avg(a),m.d)}${m.u}, niedrigster Wert ${f(Math.min(...a),m.d)}, höchster ${f(Math.max(...a),m.d)} (Tage mit Daten: ${a.length})</div>`;
+}
+function renderOv(){
+ $('#rg').innerHTML=[7,30,90,365].map(n=>`<button class="rb" data-n="${n}" aria-pressed="${n==rng}">${n} Tage</button>`).join('');
+ cards(M,'#cards','#big','ov');cards(FM,'#cards2','#big2','fi');
+}
+const CMP=[['sleep','Schlaf','h',1,1],['rem','REM-Schlaf','h',1,1],['deep','Tiefschlaf','h',1,1],['sscore','Schlaf-Score','',0,1],['rhr','Ruhepuls','bpm',0,-1],['hrv','HRV','ms',0,1],['stress','Stress','',0,-1],['bblow','Body Battery Tiefpunkt','',0,1],['steps','Schritte','',0,1]];
+function renderCmp(){
+ const A=dates();
+ if(!A.length){$('#cmp').innerHTML='';return}
+ const rows=[],fl=[];
+ CMP.forEach(([k,n,u,d,dir])=>{
+  const s=ser(k,90).v,w7=s.slice(83),p7=s.slice(76,83),w=avg(w7),p=avg(p7),b=avg(s);
+  if(w==null||b==null||nn(w7).length<(k=='hrv'||k=='sscore'?2:4)||nn(s).length<10)return;
+  const dev=(w-b)/b*100,sg=dir*dev,cl=sg<-10?'bad':sg>10?'good':'';
+  rows.push(`<tr><td>${n}</td><td>${f(w,d)}${u?' '+u:''}</td><td>${f(p,d)}</td><td>${f(b,d)}</td><td class="${cl}">${dev>=0?'▲ +':'▼ −'}${Math.abs(dev).toFixed(0)} %</td></tr>`);
+  if(cl)fl.push(`<li><b>${n}:</b> ${f(w,d)}${u?' '+u:''} in den letzten 7 Tagen, ${Math.abs(dev).toFixed(0)} % ${dev<0?'unter':'über'} deinem 90-Tage-Schnitt (${f(b,d)}), das ist ${cl=='bad'?'ungünstiger':'günstiger'}.</li>`);
+ });
+ const rs=ser('rhr',90).v,r3=nn(rs.slice(87)),rb=nn(rs.slice(0,87));
+ if(r3.length>=2&&rb.length>=20){const m=avg(rb),sd=Math.sqrt(avg(rb.map(x=>(x-m)**2))),a3=avg(r3);if(a3>m+Math.max(3,1.5*sd))fl.unshift(`<li><b>Frühwarnung Ruhepuls:</b> ${f(a3,0)} bpm in den letzten 3 Tagen, normal sind bei dir etwa ${f(m,0)}. Das kann auf Müdigkeit, Stress oder eine beginnende Erkrankung hindeuten, ist aber nur ein Anhaltspunkt und keine medizinische Aussage.</li>`)}
+ $('#cmp').innerHTML=`<h2>Letzte 7 Tage im Vergleich</h2><div class="lab" style="margin-bottom:8px">Stand ${fd(A[A.length-1])}, Abweichung gegenüber dem Schnitt der letzten 90 Tage. Ab 10 % Unterschied wird markiert.</div><div class="chart"><table><thead><tr><th></th><th>7 Tage</th><th>Davor</th><th>90 Tage Ø</th><th>Abweichung</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`+(fl.length?`<ul>${fl.join('')}</ul>`:'<p class="lab">Keine auffälligen Abweichungen.</p>');
+}
+
+
+const ld=d=>new Date(+d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const hmm=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s%60).padStart(2,'0')};
+function ring(p,c,t,s){const C=2*Math.PI*34,pc=Math.round(p*100);return`<div style="text-align:center"><svg viewBox="0 0 80 80" style="width:104px;margin:0 auto" role="img" aria-label="${t}: ${pc} Prozent"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="40" cy="40" r="34" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.min(1,p))}" transform="rotate(-90 40 40)"/><text x="40" y="45" text-anchor="middle" font-size="16" font-weight="700" fill="var(--ink)">${pc}%</text></svg><div><b>${t}</b></div><small>${s}</small></div>`}
+function renderGoal(){
+ if(!dates().length){$('#goal').innerHTML='';return}
+ const st=avg(ser('steps',7).v),sl=avg(ser('sleep',7).v),mon=new Date();mon.setHours(0,0,0,0);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));
+ const km=acts.filter(a=>new Date(a.d)>=mon).reduce((p,a)=>p+a.km,0);
+ $('#goal').innerHTML=`<h2>Ziele</h2><div class="goals">${ring((st||0)/G.steps,'var(--z2)','Schritte',f(st,0)+' von '+f(G.steps,0)+' pro Tag (7 Tage)')}${ring((sl||0)/G.sleep,'var(--run)','Schlaf',f(sl,1)+' von '+f(G.sleep,1)+' h pro Nacht (7 Tage)')}${ring(km/G.km,'var(--bike)','Kilometer',f(km,1)+' von '+G.km+' km diese Woche')}</div><div class="gi"><label>Schritte/Tag <input type="number" data-g="steps" value="${G.steps}"></label><label>Schlaf in h <input type="number" step="0.5" data-g="sleep" value="${G.sleep}"></label><label>km/Woche <input type="number" data-g="km" value="${G.km}"></label></div>`;
+}
+function renderSlp(){
+ const A=dates().filter(d=>days[d].ss&&days[d].se).slice(-60);
+ if(A.length<7){$('#slp').innerHTML='';return}
+ const mn=(d,k)=>{const x=days[d][k],t=new Date(typeof x=='number'?x:x+'Z');return t.getHours()*60+t.getMinutes()};
+ const bt=A.map(d=>{const m=mn(d,'ss');return m<720?m+1440:m}),wk=A.map(d=>mn(d,'se'));
+ const med=a=>[...a].sort((x,y)=>x-y)[Math.floor(a.length/2)],sd=a=>{const m=a.reduce((p,c)=>p+c,0)/a.length;return Math.sqrt(a.reduce((p,c)=>p+(c-m)**2,0)/a.length)};
+ const hm=m=>{m=Math.round(m)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+ const wd=[[],[],[],[],[],[],[]];dates().slice(-120).forEach(d=>{if(days[d].sleep!=null)wd[(new Date(d+'T12:00:00Z').getUTCDay()+6)%7].push(days[d].sleep)});
+ const wa=wd.map(a=>a.length?avg(a):null),mx=Math.max(9,...nn(wa));
+ const bars=wa.map((v,i)=>v==null?'':`<rect x="${20+i*80}" y="${110-v/mx*95}" width="56" height="${v/mx*95}" rx="8" fill="var(--run)"/><text x="${48+i*80}" y="${104-v/mx*95}" text-anchor="middle" font-size="14" fill="var(--ink)">${f(v,1)}</text><text x="${48+i*80}" y="132" text-anchor="middle" font-size="13" fill="var(--mute)">${'MoDiMiDoFrSaSo'.substr(i*2,2)}</text>`).join('');
+ const debt=nn(ser('sleep',7).v).reduce((p,v)=>p+(G.sleep-v),0);
+ $('#slp').innerHTML=`<h2>Schlafmuster</h2><div class="kv"><div><div class="num">${hm(med(bt))}</div><small>übliche Einschlafzeit</small></div><div><div class="num">${hm(med(wk))}</div><small>übliches Aufwachen</small></div><div><div class="num">±${Math.round(sd(bt))} min</div><small>Streuung der Einschlafzeit</small></div><div><div class="num">${debt>0?'−':'+'}${f(Math.abs(debt),1)} h</div><small>${debt>0?'Schlafdefizit':'Überschuss'}, 7 Tage, Ziel ${f(G.sleep,1)} h</small></div></div><div class="lab">Schlafdauer nach Wochentag (letzte 120 Tage)</div><svg viewBox="0 0 600 140" role="img" aria-label="Schlafdauer nach Wochentag">${bars}</svg>`;
+}
+function renderCor(){
+ const tr=new Set(acts.filter(a=>a.t=='Laufen'||a.t=='Mountainbike'||a.t=='Fußball'||a.m).map(a=>ld(new Date(a.d)))),first=[...tr].sort()[0];
+ if(!first){$('#cor').innerHTML='';return}
+ const nx=d=>new Date(new Date(d+'T12:00:00Z').getTime()+864e5).toISOString().slice(0,10);
+ const rows=[['rhr','Ruhepuls',0],['hrv','HRV',0],['sleep','Schlaf in h',1],['rem','REM in h',1],['bb','Body Battery Maximum',0],['stress','Stress',0]].map(([k,n,d])=>{
+  const a=[],b=[];dates().forEach(x=>{const y=days[nx(x)];if(x<first||!y||y[k]==null)return;(tr.has(x)?a:b).push(y[k])});
+  if(a.length<4||b.length<4)return'';
+  const va=avg(a),vb=avg(b);return`<tr><td>${n}</td><td>${f(va,d)} (${a.length})</td><td>${f(vb,d)} (${b.length})</td><td>${va>=vb?'+':'−'}${f(Math.abs(va-vb),d)}</td></tr>`}).join('');
+ $('#cor').innerHTML=rows?`<h2>Training und die Nacht danach</h2><div class="lab" style="margin-bottom:8px">Werte der Nacht nach einem Lauf- oder MTB-Tag im Vergleich zur Nacht nach anderen Tagen (Anzahl in Klammern). Das ist nur ein grober Hinweis, kein Beweis für Ursache und Wirkung.</div><div class="chart"><table><thead><tr><th></th><th>Nach Training</th><th>Sonst</th><th>Unterschied</th></tr></thead><tbody>${rows}</tbody></table></div>`:'';
+}
+function renderEff(){
+ let h='';
+ [['Laufen','var(--run)'],['Mountainbike','var(--bike)']].forEach(([t,c])=>{
+  const r=acts.filter(a=>a.t==t&&a.avg>0&&a.km>1&&a.s>600).sort((x,y)=>new Date(x.d)-new Date(y.d));if(r.length<3)return;
+  const v=r.map(a=>a.km/(a.s/3600)/a.avg*100);
+  h+=`<div class="lab" style="margin-top:10px"><b>${t}</b>: ${f(v[0],1)} → ${f(v[v.length-1],1)} (${r.length} Aktivitäten, älteste links)</div>${line(v,600,150,c,1,r.map(a=>a.d.slice(0,10)))}`});
+ $('#eff').innerHTML=h?`<h2>Fitness-Trend</h2><div class="lab">Tempo pro Herzschlag (km/h geteilt durch Durchschnittspuls, mal 100). Höher heißt: schneller bei gleichem Puls. Gelände, Wetter und Tagesform verfälschen das, es zeigt eine Tendenz.</div>`+h:'';
+}
+const zs=a=>a.z&&a.z.some(Boolean)?a.z:a.hr.length>5?(()=>{const c=[0,0,0,0,0];a.hr.forEach(v=>{c[zoneOf(v)]++});return c.map(v=>v/a.hr.length*a.s)})():null;
+function renderZwk(){
+ const mon=new Date();mon.setHours(0,0,0,0);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));const W=[];
+ for(let i=7;i>=0;i--){const a=new Date(+mon-i*7*864e5),b=new Date(+a+7*864e5),z=[0,0,0,0,0];
+  acts.forEach(x=>{const d=new Date(x.d),q=zs(x);if(q&&d>=a&&d<b)q.forEach((v,k)=>z[k]+=v/60)});W.push({a,z,t:z.reduce((p,c)=>p+c,0)})}
+ if(!W.some(w=>w.t)){$('#zwk').innerHTML='';return}
+ const mx=Math.max(60,...W.map(w=>w.t));
+ const bars=W.map((w,i)=>{let y=130;return w.z.map((v,k)=>{const h=v/mx*115;y-=h;return`<rect x="${20+i*70}" y="${y}" width="50" height="${h}" fill="var(--z${k+1})"/>`}).join('')+`<text x="${45+i*70}" y="150" text-anchor="middle" font-size="12" fill="var(--mute)">${w.a.getDate()}.${w.a.getMonth()+1}.</text><text x="${45+i*70}" y="${126-w.t/mx*115}" text-anchor="middle" font-size="12" fill="var(--ink)">${Math.round(w.t)}</text>`}).join('');
+ $('#zwk').innerHTML=`<h2>Pulszonen pro Woche</h2><div class="lab">Minuten pro Woche in den Zonen 1 bis 5 (unten Z1, oben Z5). Ein hoher Anteil in Z4 und Z5 bedeutet viel harte Belastung.</div><div class="chart"><svg viewBox="0 0 600 158" style="min-width:520px" role="img" aria-label="Pulszonen pro Woche">${bars}</svg></div>`;
+}
+function renderCal(){
+ if(!acts.length){$('#cal').innerHTML='';return}
+ const mon=new Date();mon.setHours(0,0,0,0);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));const st=new Date(+mon-25*7*864e5),by={};
+ acts.forEach(a=>{const k=ld(new Date(a.d));if(!by[k]||a.s>by[k].s)by[k]=a});
+ let r='';for(let w=0;w<26;w++)for(let d=0;d<7;d++){const dt=new Date(+st+(w*7+d)*864e5+432e5);if(dt>Date.now())continue;const k=ld(dt),a=by[k];
+  r+=`<rect x="${w*22+2}" y="${d*22+2}" width="18" height="18" rx="5" fill="${a?col(a.t):'var(--line)'}" opacity="${a?Math.min(1,.35+a.s/5400*.65):.45}"><title>${k}${a?': '+esc(a.n)+', '+a.km.toFixed(1)+' km':''}</title></rect>`}
+ $('#cal').innerHTML=`<h2>Kalender, letzte 26 Wochen</h2><div class="chart"><svg viewBox="0 0 574 158" style="min-width:520px" role="img" aria-label="Trainingskalender">${r}</svg></div><div class="lab">Farbe: Art der Aktivität, Stärke: Dauer. Zeilen von Montag bis Sonntag.</div>`;
+}
+const RN={'Best 1km Run':['Schnellster Kilometer','t'],'Best 1mile Run':['Schnellste Meile','t'],'Best 5km Run':['Schnellste 5 km','t'],'Farthest Run':['Längster Lauf','km'],'Farthest Cycle':['Längste Radtour','km'],'Best 40km Cycle':['Schnellste 40 km (Rad)','t'],'Max Elevation Gain':['Meiste Höhenmeter','m'],'Most Steps in a Day':['Meiste Schritte an einem Tag','n'],'Most Steps in a Week':['Meiste Schritte in einer Woche','n'],'Most Steps in a Month':['Meiste Schritte in einem Monat','n'],'Longest Goal Streak':['Längste Zielserie (Tage)','n']};
+function renderFi(){
+ const RT=[['r5','5 km'],['r10','10 km'],['rh','Halbmarathon'],['rm','Marathon']];
+ const rows=RT.map(([k,n])=>{const s=ser(k,90).v,v=last(s),o=last(s.slice(0,60));if(v==null)return'';
+  const dl=o==null?'':`<td class="${v<o?'good':'bad'}">${v<o?'▼ schneller um ':'▲ langsamer um '}${hmm(Math.abs(v-o))}</td>`;return`<tr><td>${n}</td><td>${hmm(v)}</td>${dl||'<td></td>'}</tr>`}).join('');
+ $('#race').innerHTML=rows?`<h2>Rennzeit-Prognose</h2><div class="lab" style="margin-bottom:8px">Garmins Schätzung aus deiner aktuellen Form, Vergleich mit dem Stand vor etwa 30 Tagen.</div><table><thead><tr><th></th><th>Prognose</th><th>Veränderung</th></tr></thead><tbody>${rows}</tbody></table>`:'';
+ const rr=recs.filter(x=>RN[x.personalRecordType]).map(x=>{const [n,u]=RN[x.personalRecordType],v=x.value,t=new Date(x.prStartTimeGMT),ds=isNaN(t)?'':t.toLocaleDateString('de-AT',{day:'numeric',month:'short',year:'numeric'});
+  return`<tr><td>${n}</td><td>${u=='t'?hmm(v):u=='km'?f(v/1000,1)+' km':u=='m'?f(v,0)+' m':f(v,0)}</td><td>${ds}</td></tr>`}).join('');
+ $('#rec').innerHTML=rr?`<h2>Bestleistungen</h2><table><thead><tr><th></th><th>Bestwert</th><th>Datum</th></tr></thead><tbody>${rr}</tbody></table>`:'';
+}
+
+
+const zoneOf=v=>ZN?(v>=ZN[4]?4:v>=ZN[3]?3:v>=ZN[2]?2:v>=ZN[1]?1:0):(v/maxHR<.6?0:v/maxHR<.7?1:v/maxHR<.8?2:v/maxHR<.9?3:4);
+function renderToday(){
+ if(!dates().length){$('#today').innerHTML='';return}
+ const g=(k,n)=>last(ser(k,n).v),why=[];let sc=0;
+ const add=(n,t)=>{sc+=n;why.push(t)};
+ const rd=g('ready',3),sl=g('sleep',2),bb=g('bb',2),acu=g('acute',3),ac=acu>0?g('acwr',3):null,hv=g('hrv',3),hb=avg(ser('hrv',60).v),r3=avg(ser('rhr',3).v),rb=avg(ser('rhr',60).v);
+ const ball=d=>acts.some(a=>(a.m||a.t=='Fußball')&&Date.now()-new Date(a.d)<d*864e5),man3=ball(3);
+ const hard=acts.filter(a=>Date.now()-new Date(a.d)<1.6*864e5&&(a.te>=3.5||(a.m&&a.rpe>=7)||(a.t=='Fußball'&&a.s>=3600)||((zs(a)||[]).slice(3).reduce((p,c)=>p+c,0)>900)));
+ if(rd!=null){if(rd<40)add(-2,`Trainingsbereitschaft niedrig (${rd})`);else if(rd<60)add(-1,`Trainingsbereitschaft mittel (${rd})`);else add(rd>=75?1:0,`Trainingsbereitschaft ${rd}`)}
+ if(sl!=null&&sl<6.5)add(-1,`wenig Schlaf (${f(sl,1)} h)`);
+ if(hv!=null&&hb&&hv<hb*.9)add(-1,`HRV unter deinem Schnitt (${f(hv,0)} statt ${f(hb,0)} ms)`);
+ if(r3!=null&&rb&&r3>rb+3)add(-2,`Ruhepuls erhöht (${f(r3,0)} statt ${f(rb,0)} bpm)`);
+ if(bb!=null&&bb<60)add(-1,`Body Battery morgens nur ${bb}`);
+ if(acu===0&&!man3)add(1,'seit Tagen kaum Belastung, eine Steigerung ist möglich');
+ if(ac!=null){if(ac>1.5)add(-2,`Belastungsverhältnis hoch (${f(ac,2)})`);else if(ac<.8)add(1,`Belastung zuletzt niedrig (${f(ac,2)}), Steigerung möglich`)}
+ const ts=dates().map(d=>days[d].tstat).filter(x=>x&&x!='NO_STATUS').pop();
+ if(ts=='DETRAINING'&&!ball(7))add(1,'Trainingsstatus Leistungsabbau, mehr Training ist sinnvoll');else if(ts=='OVERREACHING'||ts=='STRAINED')add(-2,'Trainingsstatus Überlastung')
+ if(hard.length)add(-1,'in den letzten Stunden schon eine harte Einheit');
+ if(!why.length){$('#today').innerHTML='';return}
+ const r=sc<=-3?['Ruhetag','Erholung hat Vorrang, höchstens ein lockerer Spaziergang.']:sc<0?['Locker trainieren','Zone 1 bis 2, etwa 30 bis 45 Minuten, nicht an die Grenze gehen.']:sc==0?['Normales Training','Deine Werte sprechen für eine normale Einheit.']:['Gute Voraussetzungen','Eine intensivere Einheit ist heute gut möglich.'];
+ const A=dates();
+ $('#today').innerHTML=`<h2>Heute</h2><div class="kv" style="grid-template-columns:1fr;margin:6px 0 8px"><div><div class="num">${r[0]}</div><div>${r[1]}</div></div></div><ul style="margin:0;padding-left:20px">${why.map(x=>`<li>${x}</li>`).join('')}</ul><div class="lab" style="margin-top:8px">Stand ${fd(A[A.length-1])} · Regelbasierte Orientierung aus deinen Garmin-Werten, keine Trainingsberatung. Wenn du dich krank fühlst, lass das Training aus.</div>`;
+}
+function renderRt(){
+ const R=acts.filter(a=>a.sl&&a.sn&&a.km>1&&(a.t=='Laufen'||a.t=='Mountainbike'||a.t=='Wandern')),Gs=[];
+ R.forEach(a=>{const g=Gs.find(g=>g.t==a.t&&hav(g.sl,g.sn,a.sl,a.sn)<.3&&Math.abs(g.km-a.km)/g.km<.12);if(g)g.l.push(a);else Gs.push({t:a.t,sl:a.sl,sn:a.sn,km:a.km,l:[a]})});
+ const rows=Gs.filter(g=>g.l.length>=2).sort((x,y)=>y.l.length-x.l.length).slice(0,8).map(g=>{const l=[...g.l].sort((x,y)=>new Date(x.d)-new Date(y.d)),b=l.reduce((m,a)=>a.s<m.s?a:m),a1=l[0],a2=l[l.length-1];
+  return`<tr><td>${esc(g.t)}: ${esc(a1.n.replace(/\s+\S+$/,'')||a1.n)}</td><td>${l.length}×</td><td>${f(g.km,1)} km</td><td>${fT(b.s)}</td><td>${fT(a2.s)}</td><td>${a1.avg||'–'} → ${a2.avg||'–'}</td></tr>`}).join('');
+ $('#rt').innerHTML=rows?`<h2>Wiederkehrende Strecken</h2><div class="lab" style="margin-bottom:8px">Aktivitäten mit gleichem Startort (etwa 300 m), gleicher Art und ähnlicher Länge (±12 %) zählen als dieselbe Strecke.</div><div class="chart"><table><thead><tr><th>Strecke</th><th>Anzahl</th><th>Länge</th><th>Bestzeit</th><th>Letzte Zeit</th><th>Puls erste → letzte</th></tr></thead><tbody>${rows}</tbody></table></div>`:'';
+}
+function renderTst(){
+ const TS={DETRAINING:'Leistungsabbau',UNPRODUCTIVE:'Unproduktiv',OVERREACHING:'Überlastung',STRAINED:'Angestrengt',PRODUCTIVE:'Produktiv',PEAKING:'Hochform',MAINTAINING:'Halten',RECOVERY:'Erholung'};
+ const A=dates().filter(d=>days[d].tstat&&days[d].tstat!='NO_STATUS'),kv=[];
+ if(A.length){const l=days[A[A.length-1]].tstat;let n=0;for(let i=A.length-1;i>=0&&days[A[i]].tstat==l;i--)n++;kv.push([TS[l]||l,`Trainingsstatus seit ${n} Tagen, Stand ${fd(A[A.length-1])}`])}
+ const w=BD.w||[];
+ if(w.length){const l=w[w.length-1];kv.push([f(l[1],1)+' kg','Gewicht am '+fd(l[0])+(w.length>1?', zuvor '+f(w[w.length-2][1],1)+' kg':'')])}
+ if(BD.h)kv.push([f(BD.h,0)+' cm','Größe']);
+ if(BD.lt)kv.push([BD.lt+' bpm','Laktatschwelle (Puls)']);
+ if(ZN)kv.push([ZN.join(' / '),'Beginn von Zone 1 bis 5 in bpm, Maximalpuls '+maxHR]);
+ $('#tst').innerHTML=kv.length?`<h2>Trainingsstatus und Körper</h2><div class="kv" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr))">${kv.map(x=>`<div><div class="num" style="font-size:22px">${x[0]}</div><small>${x[1]}</small></div>`).join('')}</div>`:'';
+}
+function renderRv(){
+ const P=[...new Set([...acts.map(a=>ld(new Date(a.d)).slice(0,7)),...dates().map(d=>d.slice(0,7))])].sort().reverse();
+ if(!P.length){$('#recap').innerHTML='';return}
+ if(rvp!='all'&&!P.includes(rvp))rvp=P[0];
+ const inP=d=>rvp=='all'||d.slice(0,7)==rvp,A=acts.filter(a=>inP(ld(new Date(a.d)))),D=dates().filter(inP).map(d=>days[d]);
+ const sm=k=>A.reduce((p,a)=>p+(a[k]||0),0),mxk=t=>Math.max(0,...A.filter(a=>a.t==t).map(a=>a.km)),av=k=>avg(D.map(x=>x[k]));
+ rvTitle=rvp=='all'?'Gesamter Zeitraum':new Date(rvp+'-01T12:00:00Z').toLocaleDateString('de-AT',{month:'long',year:'numeric'});
+ rvItems=[['Aktivitäten',String(A.length)],['Distanz',f(sm('km'),0)+' km'],['Zeit',fT(sm('s'))],['Höhenmeter',f(sm('el'),0)+' m'],['Trainingstage',String(new Set(A.map(a=>ld(new Date(a.d)))).size)],['Längster Lauf',f(mxk('Laufen'),1)+' km'],['Längste MTB-Tour',f(mxk('Mountainbike'),1)+' km'],['Schlaf im Schnitt',f(av('sleep'),1)+' h'],['Ruhepuls im Schnitt',f(av('rhr'),0)+' bpm'],['HRV im Schnitt',f(av('hrv'),0)+' ms'],['Schritte pro Tag',f(av('steps'),0)],['Stress im Schnitt',f(av('stress'),0)]];
+ $('#recap').innerHTML=`<h2>Rückblick</h2><div class="gi" style="margin:0 0 12px"><select id="rvsel" aria-label="Zeitraum">${P.map(x=>`<option value="${x}"${x==rvp?' selected':''}>${new Date(x+'-01T12:00:00Z').toLocaleDateString('de-AT',{month:'long',year:'numeric'})}</option>`).join('')}<option value="all"${rvp=='all'?' selected':''}>Gesamter Zeitraum</option></select><button class="btn" id="rvsave" type="button">Als Bild speichern</button><button class="gl" id="docsave" type="button">Überblick für den Arzt</button></div><div class="kv" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">${rvItems.map(x=>`<div><div class="num">${esc(x[1])}</div><small>${x[0]}</small></div>`).join('')}</div>`;
+}
+function recapSvg(t,items){
+ const w=760,h=150+Math.ceil(items.length/2)*72,tx=(x,y,sz,wt,c,s)=>`<text x="${x}" y="${y}" font-family="sans-serif" font-size="${sz}" font-weight="${wt}" fill="${c}">${esc(s)}</text>`;
+ return`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4a261"/><stop offset=".5" stop-color="#e9c46a"/><stop offset="1" stop-color="#7cc4ec"/></linearGradient></defs><rect width="${w}" height="${h}" rx="28" fill="url(#g)"/><rect x="20" y="20" width="${w-40}" height="${h-40}" rx="22" fill="#fff" fill-opacity=".74"/>${tx(48,80,34,700,'#12263a','Rückblick: '+t)}${items.map((it,i)=>tx(48+(i%2)*340,136+Math.floor(i/2)*72,28,700,'#12263a',it[1])+tx(48+(i%2)*340,160+Math.floor(i/2)*72,16,400,'#5d7184',it[0])).join('')}</svg>`;
+}
+const toast=m=>{const n=$('#note');n.innerHTML='<div class="note">'+esc(m)+'</div>';n.scrollIntoView({block:'center',behavior:'smooth'})};
+async function useCap(n){try{return window.claude&&await claude.use(n)}catch(e){return null}}
+async function saveFile(name,data){
+ const dl=await useCap('downloads');
+ if(dl){try{await dl.save({filename:name,data});return'ok'}catch(e){return e&&e.code=='declined'?'declined':'fail'}}
+ if(!window.claude){const a=document.createElement('a');a.href=URL.createObjectURL(data instanceof Blob?data:new Blob([data]));a.download=name;document.body.appendChild(a);a.click();a.remove();return'ok'}
+ return'unavail';
+}
+const bmsg=m=>{const el=$('#bkmsg');if(el){el.textContent=m;el.scrollIntoView({block:'center',behavior:'smooth'})}};
+async function saveRecap(){
+ const svg=recapSvg(rvTitle,rvItems);let r='fail';
+ try{const img=new Image();await new Promise((ok,bad)=>{img.onload=ok;img.onerror=bad;img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});
+  const c=document.createElement('canvas');c.width=img.width*2;c.height=img.height*2;c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  r=await saveFile('rueckblick-'+rvp+'.png',await new Promise(ok=>c.toBlob(ok,'image/png')))}catch(e){}
+ if(r!='ok'&&r!='declined')r=await saveFile('rueckblick-'+rvp+'.svg',svg);
+ if(r!='ok'&&r!='declined')toast('Speichern ist in dieser Ansicht nicht möglich.');
+}
+async function saveBackup(){
+ const txt=JSON.stringify({gdBackup:1,days,acts,recs,goals:G,tags,body:BD,zn:ZN,mhr:maxHR}),name='dashboard-sicherung-'+ld(new Date())+'.json';
+ const r=await saveFile(name,txt);
+ if(r=='ok'){bmsg('Gespeichert: '+name);return}
+ if(r=='declined'){bmsg('Du hast das Speichern abgelehnt. Klicke noch einmal auf „Sicherung speichern" und bestätige die Rückfrage.');return}
+ const ta=$('#bkta');ta.hidden=false;ta.value=txt;ta.focus();ta.select();
+ try{await navigator.clipboard.writeText(txt)}catch(e){}
+ bmsg('Speichern als Datei ist hier nicht möglich. Der Text im Feld darunter ist deine Sicherung: Markiere ihn mit Strg+A, kopiere ihn mit Strg+C, füge ihn im Windows-Editor ein und speichere ihn als dashboard-sicherung.json (Dateityp „Alle Dateien") in C:\\garmin.');
+}
+function ctx(){
+ const rows=dates().slice(-45).map(d=>{const x=days[d];return[d,x.sleep!=null?x.sleep.toFixed(1):'',x.rem!=null?x.rem.toFixed(1):'',x.rhr,x.hrv,x.stress,x.bb,x.bblow,x.steps,x.ready,x.tstat].map(v=>v==null?'':v).join(';')});
+ const ac=acts.slice(0,30).map(a=>[a.d.slice(0,10),a.t,a.km.toFixed(1)+' km',fT(a.s),a.avg?a.avg+' bpm':'',a.el?a.el+' m':''].join(', '));
+ const r=k=>last(ser(k,365).v);
+ return'Tageswerte (Datum;Schlaf h;REM h;Ruhepuls;HRV;Stress;Body Battery Max;Body Battery Min;Schritte;Trainingsbereitschaft;Trainingsstatus):\n'+rows.join('\n')+'\n\nLetzte Aktivitäten:\n'+ac.join('\n')+'\n\nWeitere Werte: VO2max '+f(r('vo2'),0)+', Ausdauer-Score '+f(r('endu'),0)+', Prognose 5 km '+(r('r5')?hmm(r('r5')):'unbekannt')+', Prognose 10 km '+(r('r10')?hmm(r('r10')):'unbekannt');
+}
+async function ask(){
+ const q=$('#q').value.trim(),out=$('#ans');if(!q)return;
+ const sample=await useCap('sample');if(!sample){out.textContent='Fragen an Claude ist in dieser Ansicht nicht verfügbar.';return}
+ $('#askbtn').disabled=true;out.textContent='Claude denkt nach ...';
+ try{
+  const r=await sample('Du wertest persönliche Fitness- und Gesundheitsdaten aus. Antworte auf Deutsch, sachlich und in höchstens 150 Wörtern, nur auf Basis der Daten unten. Stelle keine Diagnosen und gib keine medizinischen Ratschläge; bei Sorgen empfiehl ärztlichen Rat. Wenn die Daten für die Frage nicht reichen, sag das.\n\nDATEN:\n'+ctx()+'\n\nFRAGE: '+q,{modelTier:'default',cache:false,onText:({text})=>{out.textContent=text}});
+  out.textContent=r.text;
+ }catch(e){out.textContent=e&&e.code=='not_granted'?'Du hast die Nutzung von Claude für diese Seite nicht erlaubt.':e&&e.code=='rate_limited'?'Zu viele Anfragen, bitte warte kurz.':'Die Frage konnte nicht beantwortet werden.'}
+ $('#askbtn').disabled=false;
+}
+
+
+const nxd=d=>new Date(new Date(d+'T12:00:00Z').getTime()+864e5).toISOString().slice(0,10);
+const saveTags=()=>{try{localStorage.setItem('tags',JSON.stringify(tags))}catch(e){}};
+const TAGS0=['Alkohol','Stress','Krank','Reise','Spät gegessen','Wenig Wasser'];
+function renderDiary(){
+ const A=dates();if(!A.length){$('#diary').innerHTML='';return}
+ if(!dsel)dsel=A[A.length-1];
+ const cur=tags[dsel]||[],used=[...new Set(Object.values(tags).flat())],all=[...new Set([...TAGS0,...used])];
+ const rows=used.map(t=>{const ds=Object.keys(tags).filter(d=>tags[d].includes(t));if(ds.length<3)return'';
+  const o=[['sleep','Schlaf (h)',1],['rem','REM (h)',1],['hrv','HRV',0],['rhr','Ruhepuls',0],['bb','Body Battery Max',0]].map(([k,n,d])=>{const a=[],b=[];A.forEach(x=>{const y=days[nxd(x)];if(!y||y[k]==null)return;(ds.includes(x)?a:b).push(y[k])});if(a.length<3||b.length<5)return'';const va=avg(a),vb=avg(b);return`${n} ${va>=vb?'+':'−'}${f(Math.abs(va-vb),d)}`}).filter(Boolean).join(', ');
+  return o?`<tr><td>${esc(t)} (${ds.length} Tage)</td><td style="text-align:left">${o}</td></tr>`:''}).join('');
+ $('#diary').innerHTML=`<h2>Tagebuch</h2><div class="lab">Markiere Tage, die Schlaf und Erholung beeinflussen könnten. Sobald ein Tag mindestens 3-mal markiert ist, siehst du unten, wie die Nacht danach im Vergleich ausfällt.</div><div class="gi"><label>Tag <input type="date" id="ddate" value="${dsel}"></label></div><div class="gi">${all.map(t=>`<button class="gl" type="button" data-tag="${esc(t)}" aria-pressed="${cur.includes(t)}">${esc(t)}</button>`).join('')}</div><div class="gi"><input type="text" id="dnew" placeholder="Eigener Tag" maxlength="30"><button class="gl" type="button" id="dadd">Hinzufügen</button></div>`+(rows?`<div class="chart" style="margin-top:10px"><table><thead><tr><th>Markierung</th><th style="text-align:left">Nacht danach im Vergleich zu sonst</th></tr></thead><tbody>${rows}</tbody></table></div>`:'');
+}
+function renderGap(){
+ const A=dates();if(!A.length){$('#gap').innerHTML='';return}
+ const end=new Date(A[A.length-1]+'T12:00:00Z').getTime(),N=371,KS=['sleep','rhr','stress','steps','bb'];let r='',run=0,gapMax=0,full90=0,any365=0;
+ for(let i=0;i<N;i++){const d=new Date(end-(N-1-i)*864e5).toISOString().slice(0,10),x=days[d],n=x?KS.filter(k=>x[k]!=null).length:0;
+  if(n==0){run++;gapMax=Math.max(gapMax,run)}else run=0;
+  if(i>=N-90&&n>=3)full90++;if(i>=N-365&&n>0)any365++;
+  r+=`<rect x="${Math.floor(i/7)*14+1}" y="${(i%7)*14+1}" width="11" height="11" rx="3" fill="${n?'var(--run)':'var(--line)'}" opacity="${n?.3+n/5*.7:.5}"><title>${d}: ${n} von 5 Werten</title></rect>`}
+ $('#gap').innerHTML=`<h2>Datenlücken</h2><div class="lab" style="margin-bottom:6px">Jeder Block ist ein Tag (älteste links, jeweils 7 Tage untereinander). Dunkler heißt: mehr Werte vorhanden. Grau: keine Daten, zum Beispiel weil die Uhr nicht getragen wurde.</div><div class="chart"><svg viewBox="0 0 ${Math.ceil(N/7)*14+2} 100" style="min-width:560px" role="img" aria-label="Datenabdeckung">${r}</svg></div><div class="lab">Gut abgedeckte Tage in den letzten 90 Tagen: ${full90} von 90. Tage mit Daten in den letzten 365 Tagen: ${any365}. Längste Lücke: ${gapMax} Tage.</div>`;
+}
+const reg=a=>{const p=a.map((y,x)=>[x,y]).filter(q=>q[1]!=null),n=p.length;if(n<10)return null;const mx=p.reduce((s,q)=>s+q[0],0)/n,my=p.reduce((s,q)=>s+q[1],0)/n;let nu=0,de=0;p.forEach(q=>{nu+=(q[0]-mx)*(q[1]-my);de+=(q[0]-mx)**2});return de?nu/de:null};
+const pt=x=>String(x).trim().split(':').reduce((s,v)=>s*60+(+v||0),0);
+function renderGoalT(){
+ const RT={r5:'5 km',r10:'10 km',rh:'Halbmarathon',rm:'Marathon'},k=G.tk||'r5',s=ser(k,90).v,v=last(s);
+ if(v==null&&!G.ts){$('#goalt').innerHTML='';return}
+ let res='';
+ if(G.ts>0&&v!=null){const gap=v-G.ts,sl=reg(s);
+  res=gap<=0?'Dein Ziel liegt auf oder unter Garmins aktueller Prognose.':sl!=null&&sl<-.01?`Abstand ${hmm(gap)}. Bei gleichbleibendem Trend der letzten 90 Tage (${f(-sl*7,1)} Sekunden pro Woche schneller) dauert es etwa ${Math.max(1,Math.round(gap/-sl/7))} Wochen. Das ist eine grobe Hochrechnung.`:`Abstand ${hmm(gap)}. In den letzten 90 Tagen ist kein klarer Verbesserungstrend zu sehen.`}
+ else if(v!=null)res='Gib eine Zielzeit ein, um den Abstand zu sehen.';
+ $('#goalt').innerHTML=`<h2>Zielzeit</h2><div class="gi" style="margin-top:0"><select id="gk" aria-label="Distanz">${Object.entries(RT).map(([a,b])=>`<option value="${a}"${a==k?' selected':''}>${b}</option>`).join('')}</select><label>Ziel <input type="text" id="gt" size="8" placeholder="22:00" value="${G.ts?hmm(G.ts):''}"></label><span>Garmin-Prognose: <b>${v!=null?hmm(v):'–'}</b></span></div><div style="margin-top:8px">${res}</div>`;
+}
+function renderAch(){
+ const A=dates();if(!A.length){$('#ach').innerHTML='';return}
+ const streak=pred=>{let run=0,best=0,pd=null;for(const d of A){const ok=pred(days[d]),t=new Date(d+'T12:00:00Z').getTime();if(ok){run=pd!=null&&t-pd==864e5?run+1:1;pd=t;best=Math.max(best,run)}else{run=0;pd=null}}return[run,best]};
+ const wk=d=>Math.floor(new Date(d+'T12:00:00Z').getTime()/864e5/7+3/7),W=new Map();
+ acts.filter(a=>a.t!='Gehen').forEach(a=>{const d=ld(new Date(a.d)),w=wk(d);(W.get(w)||W.set(w,new Set()).get(w)).add(d)});
+ const ws=[...W.keys()].sort((a,b)=>a-b);let wr=0,wb=0,pw=null,w3=0;for(const w of ws){if(W.get(w).size>=3){w3++;wr=pw!=null&&w-pw==1?wr+1:1;pw=w;wb=Math.max(wb,wr)}else{wr=0;pw=null}}
+ const sl=streak(x=>x.sleep!=null&&x.sleep>=G.sleep),st=streak(x=>x.steps!=null&&x.steps>=G.steps),td=new Set(acts.filter(a=>a.t!='Gehen').map(a=>ld(new Date(a.d)))).size;
+ const T=[[`${sl[0]} Tage`,`Schlafziel (${f(G.sleep,1)} h) in Folge, Rekord ${sl[1]}`],[`${st[0]} Tage`,`Schrittziel (${f(G.steps,0)}) in Folge, Rekord ${st[1]}`],[`${wr} Wochen`,`mit mindestens 3 Trainingstagen in Folge, Rekord ${wb}`],[String(w3),'Wochen mit mindestens 3 Trainingstagen insgesamt'],[String(td),'Trainingstage insgesamt (ohne Gehen)']];
+ $('#ach').innerHTML=`<h2>Serien und Erfolge</h2><div class="kv" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">${T.map(x=>`<div><div class="num">${x[0]}</div><small>${x[1]}</small></div>`).join('')}</div><div class="lab">Serien zählen nur aufeinanderfolgende Tage mit Daten, Lücken unterbrechen sie. Die Ziele stellst du im Reiter „Gesundheit" unter „Ziele" ein.</div>`;
+}
+async function saveDoctor(){
+ const A=dates();if(!A.length)return;
+ const M2=[['sleep','Schlaf','h',1],['rhr','Ruhepuls','bpm',0],['hrv','HRV','ms',0],['stress','Stress','',0],['steps','Schritte pro Tag','',0],['bb','Body Battery Maximum','',0],['vo2','VO2max','',1]];
+ const rows=M2.map(([k,n,u,d])=>{const s=ser(k,180).v,c=s.slice(90),p=s.slice(0,90),a=nn(c);if(!a.length)return'';return`<tr><td>${n}</td><td>${f(avg(c),d)} ${u}</td><td>${f(Math.min(...a),d)} bis ${f(Math.max(...a),d)}</td><td>${f(avg(p),d)} ${u}</td><td>${a.length}</td></tr>`}).join('');
+ const ch=[['rhr','Ruhepuls (bpm)'],['hrv','HRV (ms)'],['sleep','Schlaf (Stunden)'],['steps','Schritte pro Tag']].map(([k,n])=>{const s=ser(k,90);return nn(s.v).length>3?`<h3>${n}</h3>${line(s.v,600,170,'#2a7f9e',1,s.d)}`:''}).join('');
+ const e=A[A.length-1],b=ser('rhr',90).d[0],w=(BD.w||[]).slice(-1)[0];
+ const html=`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Gesundheitsüberblick</title><style>:root{--mute:#5d7184;--line:#d5dde4;--ink:#12263a}body{font:15px/1.5 Arial,sans-serif;color:#12263a;max-width:760px;margin:24px auto;padding:0 16px}h1{font-size:26px;margin:0}h3{margin:18px 0 4px;font-size:16px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:6px 8px;border-bottom:1px solid #d5dde4;text-align:right}th:first-child,td:first-child{text-align:left}svg{width:100%;height:auto}.n{color:#5d7184;font-size:13px}@media print{body{margin:0}h3{break-after:avoid}svg{break-inside:avoid}}</style></head><body><h1>Gesundheitsüberblick</h1><p class="n">Zeitraum ${new Date(b+'T12:00:00Z').toLocaleDateString('de-AT')} bis ${new Date(e+'T12:00:00Z').toLocaleDateString('de-AT')}, erstellt am ${new Date().toLocaleDateString('de-AT')}${w?'. Gewicht laut Garmin-Profil: '+f(w[1],1)+' kg ('+fd(w[0])+')':''}</p><table><thead><tr><th></th><th>Letzte 90 Tage Ø</th><th>Spanne</th><th>Davor 90 Tage Ø</th><th>Tage mit Daten</th></tr></thead><tbody>${rows}</tbody></table>${ch}<p class="n">Quelle: Messwerte einer Garmin-Uhr. Die Werte sind Schätzungen eines Verbrauchergeräts und keine medizinische Messung oder Bewertung.</p></body></html>`;
+ const r=await saveFile('gesundheitsueberblick-'+e+'.html',html);if(r=='ok'||r=='declined')return;
+ const w2=window.open('','_blank');if(w2){w2.document.write(html);w2.document.close()}else toast('Der Überblick konnte nicht geöffnet werden.');
+}
+async function plan(){
+ const out=$('#planout'),sample=await useCap('sample');
+ if(!sample){out.textContent='Der Wochenplan ist in dieser Ansicht nicht verfügbar.';return}
+ $('#planbtn').disabled=true;out.textContent='Claude denkt nach ...';
+ try{
+  const r=await sample('Du schlägst einen Trainingsplan für die nächsten 7 Tage vor, auf Basis der Daten unten. Antworte auf Deutsch in höchstens 200 Wörtern als Liste von Montag bis Sonntag mit je einer kurzen Zeile (Art, Dauer, Intensität nach Zonen oder Ruhetag). Beachte die Rahmenbedingungen des Nutzers, die Erholung (Schlaf, HRV, Ruhepuls, Trainingsbereitschaft) und die letzte Belastung. Keine Diagnosen, keine medizinischen Ratschläge; erwähne am Ende einmal kurz, dass es ein Vorschlag ist.\n\nRAHMENBEDINGUNGEN: '+($('#pc').value.trim()||'keine Angaben')+'\n\nDATEN:\n'+ctx(),{modelTier:'default',cache:false,onText:({text})=>{out.textContent=text}});
+  out.textContent=r.text;
+ }catch(e){out.textContent=e&&e.code=='not_granted'?'Du hast die Nutzung von Claude für diese Seite nicht erlaubt.':e&&e.code=='rate_limited'?'Zu viele Anfragen, bitte warte kurz.':'Der Plan konnte nicht erstellt werden.'}
+ $('#planbtn').disabled=false;
+}
+
+
+const MT=['Fußball','Krafttraining','Schwimmen','Handball','Basketball','Tennis','Anderes'],MLAB=['sehr leicht','leicht','locker','moderat','spürbar','anstrengend','hart','sehr hart','extrem hart','maximal'];
+let mdate='',mt2='Fußball',mdur=90,mrpe=7;
+const persistActs=()=>{try{localStorage.setItem('acts',JSON.stringify((demo?acts.filter(a=>a.m):acts).map((a,i)=>i<150?a:{...a,hr:[]})))}catch(e){}};
+function renderMan(){
+ if(!mdate)mdate=ld(new Date());
+ const mon=new Date();mon.setHours(0,0,0,0);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));const w0=+mon,w1=w0+7*864e5,w2=w0-7*864e5;
+ const pts=(a,b)=>Math.round(acts.filter(x=>x.m&&+new Date(x.d)>=a&&+new Date(x.d)<b).reduce((p,x)=>p+x.s/60*x.rpe,0));
+ const list=acts.filter(a=>a.m).slice(0,6);
+ $('#man').innerHTML=`<h2>Einheit ohne Uhr eintragen</h2><div class="lab" style="margin-bottom:8px">Für Training, bei dem du keine Uhr trägst, zum Beispiel Fußball. Dauer mal Anstrengung ergibt eine Schätzung der Belastung. Die Einheit zählt in „Heute", Kalender, Rückblick, Serien und Schlafvergleichen mit.</div><div class="gi" style="margin-top:0"><label>Tag <input type="date" id="mdate" value="${mdate}"></label><label>Art <select id="mtype">${MT.map(t=>`<option${t==mt2?' selected':''}>${t}</option>`).join('')}</select></label><label>Dauer in Minuten <input type="number" id="mdur" min="5" max="300" value="${mdur}"></label></div><div class="gi"><label>Anstrengung: <b id="mrl">${mrpe} von 10 (${MLAB[mrpe-1]})</b><br><input type="range" id="mrpe" min="1" max="10" value="${mrpe}" style="width:min(320px,80vw)"></label></div><div class="gi"><button class="btn" type="button" id="msave">Einheit speichern</button><span>Belastungspunkte diese Woche: <b>${pts(w0,w1)}</b>, letzte Woche: <b>${pts(w2,w0)}</b></span></div>`+(list.length?`<div class="chart" style="margin-top:10px"><table><tbody>${list.map(a=>`<tr><td>${fD(a.d)}</td><td>${esc(a.t)}</td><td>${fT(a.s)}</td><td>Anstrengung ${a.rpe}</td><td><button class="gl" type="button" data-del="${a.d}">Löschen</button></td></tr>`).join('')}</tbody></table></div>`:'');
+}
+
+/* ---------- Aktivitäten ---------- */
+const fT=s=>{const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?h+':'+String(m).padStart(2,'0')+' h':m+' min'};
+const fD=d=>new Date(d).toLocaleDateString('de-AT',{weekday:'short',day:'numeric',month:'short'});
+const col=t=>t=='Laufen'?'var(--run)':t=='Mountainbike'?'var(--bike)':t=='Fußball'?'var(--z4)':'var(--mute)';
+const pace=a=>{if(!a.km||!a.s)return'–';if(a.t=='Laufen'){const p=a.s/a.km;return Math.floor(p/60)+':'+String(Math.round(p%60)).padStart(2,'0')+' min/km'}return(a.km/(a.s/3600)).toFixed(1)+' km/h'};
+function renderAc(){
+ $('#ft').innerHTML=['Alle',...new Set(acts.map(a=>a.t))].map(t=>`<button class="rb" data-t="${t}" aria-pressed="${t==ft}">${t}</button>`).join('');
+ const r=acts.filter(a=>new Date(a.d)>Date.now()-28*864e5),km=r.reduce((p,a)=>p+a.km,0),s=r.reduce((p,a)=>p+a.s,0),hs=r.filter(a=>a.avg);
+ const av=hs.length?Math.round(hs.reduce((p,a)=>p+a.avg,0)/hs.length):'–';
+ $('#stats').innerHTML=[[r.length,'Aktivitäten, 28 Tage'],[km.toFixed(0)+' km','Distanz'],[fT(s),'Zeit'],[av,'Ø Puls (bpm)']].map(x=>`<div class="stat"><div class="num">${x[0]}</div><small>${x[1]}</small></div>`).join('');
+ $('#list').innerHTML=acts.length?acts.map((a,i)=>[a,i]).filter(x=>ft=='Alle'||x[0].t==ft).slice(0,40).map(([a,i])=>`<button class="item" data-i="${i}" aria-current="${i==sel}"><span class="dot" style="background:${col(a.t)}"></span><span class="t"><b>${esc(a.n)}</b><small>${fD(a.d)}, ${a.t}</small></span><span class="r">${a.m?'Anstrengung '+a.rpe:a.km.toFixed(1)+' km'}<br><small>${a.avg?a.avg+' bpm':'–'}</small></span></button>`).join(''):'<p class="lab">Noch keine Aktivitäten importiert.</p>';
+ const mon=new Date();mon.setHours(0,0,0,0);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));
+ const W=[];for(let i=5;i>=0;i--){const a=new Date(mon-i*7*864e5),b=new Date(+a+7*864e5);W.push({a,v:acts.filter(x=>{const d=new Date(x.d);return d>=a&&d<b}).reduce((p,x)=>p+x.km,0)})}
+ const mx=Math.max(10,...W.map(w=>w.v));
+ $('#weeks').innerHTML=`<svg viewBox="0 0 600 150" role="img" aria-label="Kilometer pro Woche">${W.map((w,i)=>{const h=w.v/mx*100,x=20+i*95;return`<rect x="${x}" y="${115-h}" width="70" height="${h}" rx="4" fill="var(--run)"/><text x="${x+35}" y="${108-h}" text-anchor="middle" font-size="14" fill="var(--ink)">${w.v.toFixed(0)}</text><text x="${x+35}" y="140" text-anchor="middle" font-size="13" fill="var(--mute)">${w.a.getDate()}.${w.a.getMonth()+1}.</text>`}).join('')}</svg>`;
+ const a=acts[sel];if(!a){$('#detail').innerHTML='';return}
+ if(a.m){$('#detail').innerHTML=`<h2>${esc(a.n)}</h2><div class="lab">${fD(a.d)}, ohne Uhr eingetragen</div><div class="kv"><div><div class="num">${fT(a.s)}</div><small>Dauer</small></div><div><div class="num">${a.rpe} von 10</div><small>Anstrengung</small></div><div><div class="num">${Math.round(a.s/60*a.rpe)}</div><small>Belastungspunkte (Minuten mal Anstrengung)</small></div></div>`;return}
+ let h=`<h2>${esc(a.n)}</h2><div class="lab">${fD(a.d)}, ${a.t}</div><div class="kv"><div><div class="num">${a.km.toFixed(1)}</div><small>km</small></div><div><div class="num">${fT(a.s)}</div><small>Zeit</small></div><div><div class="num">${pace(a).split(' ')[0]}</div><small>${a.t=='Laufen'?'min/km':'km/h'}</small></div><div><div class="num">${a.avg||'–'}<small> / ${a.max||'–'}</small></div><small>Puls Ø / max</small></div></div>`;
+ if(a.el||a.te)h+=`<div class="lab" style="margin-bottom:10px">${a.el?'Höhenmeter '+a.el+' m':''}${a.el&&a.te?', ':''}${a.te?'Trainingseffekt '+a.te:''}</div>`;
+ if(a.ll&&a.ll.length>5){const k=Math.cos(rad(a.ll[0][0])),xs=a.ll.map(p=>p[1]*k),ys=a.ll.map(p=>p[0]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),sc=Math.min(300/(x1-x0||1),150/(y1-y0||1));h+=`<h2>Strecke</h2><svg viewBox="0 0 320 170" style="max-width:420px" role="img" aria-label="Streckenverlauf"><polyline fill="none" stroke="var(--run)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${a.ll.map((p,i)=>(10+(xs[i]-x0)*sc).toFixed(1)+','+(160-(ys[i]-y0)*sc).toFixed(1)).join(' ')}"/></svg>`}
+ if(a.hr.length>5){
+  const n=a.hr.length,lo=Math.min(...a.hr)-5,hi=Math.max(...a.hr)+5,X=i=>40+i/(n-1)*550,Y=v=>160-(v-lo)/(hi-lo)*140;
+  const pts=a.hr.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+  const tk=[lo,(lo+hi)/2,hi].map(v=>`<line x1="40" x2="590" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="34" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="var(--mute)">${Math.round(v)}</text>`).join('');
+  h+=`<h2>Herzfrequenz</h2><div class="chart"><svg viewBox="0 0 600 175" role="img" aria-label="Herzfrequenzverlauf">${tk}<polygon points="40,160 ${pts} 590,160" fill="var(--hr)" opacity=".12"/><polyline points="${pts}" fill="none" stroke="var(--hr)" stroke-width="2.2" stroke-linejoin="round"/></svg></div>`;
+  const c=[0,0,0,0,0];a.hr.forEach(v=>{c[zoneOf(v)]++});
+  h+=`<h2 style="margin-top:14px">Zeit in Pulszonen</h2><div class="zones">${c.map((v,i)=>`<span style="width:${v/n*100}%;background:var(--z${i+1})"></span>`).join('')}</div><div class="zl">${c.map((v,i)=>`<span>Z${i+1} ${Math.round(v/n*100)}%</span>`).join('')}</div>`;
+ }else if(a.z&&a.z.some(Boolean)){const t=a.z.reduce((p,c)=>p+c,0);h+=`<h2>Zeit in Pulszonen</h2><div class="zones">${a.z.map((v,i)=>`<span style="width:${v/t*100}%;background:var(--z${i+1})"></span>`).join('')}</div><div class="zl">${a.z.map((v,i)=>`<span>Z${i+1} ${fT(v)}</span>`).join('')}</div>`}else h+='<p class="lab">Für diese Aktivität gibt es keinen Pulsverlauf. Mit einer GPX- oder TCX-Datei siehst du Verlauf und Pulszonen.</p>';
+ $('#detail').innerHTML=h;
+}
+function render(){
+ $('#note').innerHTML=demo?'<div class="note">Das sind Beispieldaten. Importiere dein Garmin-Export-ZIP, dann siehst du deine echten Werte. Alles bleibt in deinem Browser und wird nicht an einen Server gesendet. Du kannst die Daten unter „Rückblick“ im Bereich „Daten sichern“ mit „Alle Daten löschen“ entfernen.</div>':note;
+ renderOv();renderCmp();renderGoal();renderSlp();renderCor();renderAc();renderEff();renderZwk();renderCal();renderFi();renderMan();renderToday();renderRt();renderTst();renderRv();renderDiary();renderGap();renderGoalT();renderAch();
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x==b));
+ for(const t of['ov','ac','fi','rv'])$('#'+t).hidden=b.dataset.t!=t;$('#rg').style.display=b.dataset.t=='ac'||b.dataset.t=='rv'?'none':''});
+['cards','cards2'].forEach((id,i)=>$('#'+id).addEventListener('click',e=>{const b=e.target.closest('.card');if(b){mt[i?'fi':'ov']=b.dataset.k;renderOv()}}));
+$('#rg').addEventListener('click',e=>{const b=e.target.closest('button');if(b){rng=+b.dataset.n;renderOv()}});
+$('#list').addEventListener('click',e=>{const b=e.target.closest('.item');if(b){sel=+b.dataset.i;renderAc()}});
+$('#ft').addEventListener('click',e=>{const b=e.target.closest('button');if(b){ft=b.dataset.t;sel=Math.max(0,acts.findIndex(a=>ft=='Alle'||a.t==ft));renderAc()}});
+$('#goal').addEventListener('change',e=>{const k=e.target.dataset.g;if(k){G[k]=+e.target.value||G[k];try{localStorage.setItem('goals',JSON.stringify(G))}catch(x){}renderGoal()}});
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{load([...e.target.files]);e.target.value=''};
+$('#mhr').onchange=e=>{maxHR=Math.min(230,Math.max(120,+e.target.value||190));try{localStorage.setItem('mhr',maxHR)}catch(x){}renderAc()};
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();load([...e.dataTransfer.files])});
+const idb=(m,v)=>new Promise((res,rej)=>{const r=indexedDB.open('gd',1);r.onupgradeneeded=()=>r.result.createObjectStore('h');r.onerror=()=>rej(r.error);r.onsuccess=()=>{const s=r.result.transaction('h',m=='get'?'readonly':'readwrite').objectStore('h'),q=m=='get'?s.get('dir'):s.put(v,'dir');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}});
+async function syncDir(){
+ try{
+  let h=await idb('get').catch(()=>null);
+  if(!h){h=await showDirectoryPicker({mode:'read'});await idb('put',h).catch(()=>0)}
+  else if(await h.queryPermission({mode:'read'})!='granted'&&await h.requestPermission({mode:'read'})!='granted')throw new Error('Zugriff nicht erlaubt');
+  const fs=[];
+  try{fs.push(await(await h.getFileHandle('garmin_sync.json')).getFile())}catch(e){}
+  try{const g=await h.getDirectoryHandle('gpx');for await(const[n,x] of g.entries()){if(!n.endsWith('.gpx'))continue;const fl=await x.getFile();if(fl.lastModified>Date.now()-14*864e5)fs.push(fl)}}catch(e){}
+  if(!fs.length)throw new Error('keine garmin_sync.json im Ordner');
+  await load(fs);
+ }catch(e){note='<div class="note">Ordner konnte nicht gelesen werden ('+esc(e&&e.message||e)+'). Ziehe die Datei garmin_sync.json stattdessen auf diese Seite oder nutze den Import-Knopf.</div>';render()}
+}
+$('#dir').onclick=syncDir;
+if(!window.showDirectoryPicker)$('#dir').hidden=true;
+idb('get').then(h=>{if(h)$('#dir').textContent='Ordner aktualisieren'}).catch(()=>0);
+
+$('#recap').addEventListener('change',e=>{if(e.target.id=='rvsel'){rvp=e.target.value;renderRv()}});
+$('#recap').addEventListener('click',e=>{if(e.target.id=='rvsave')saveRecap();if(e.target.id=='docsave')saveDoctor()});
+$('#askbtn').onclick=ask;
+document.querySelectorAll('#ask [data-q]').forEach(b=>b.onclick=()=>{$('#q').value=b.dataset.q;ask()});
+$('#bksave').onclick=saveBackup;
+$('#bkpastebtn').onclick=()=>{const t=$('#bkpaste').value.trim();if(t){load([new File([t],'paste.json')]);window.scrollTo({top:0,behavior:'smooth'})}};
+$('#bkload').onclick=()=>$('#file').click();
+$('#man').addEventListener('input',e=>{if(e.target.id=='mrpe'){mrpe=+e.target.value;$('#mrl').textContent=mrpe+' von 10 ('+MLAB[mrpe-1]+')'}});
+$('#man').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.id=='msave'){
+  const d=$('#mdate').value,dur=Math.min(300,Math.max(0,+$('#mdur').value||0)),ty=$('#mtype').value;
+  if(!d||dur<5){toast('Bitte Tag und eine Dauer von mindestens 5 Minuten angeben.');return}
+  const a={n:ty,t:ty=='Anderes'?'Aktivität':ty,d:new Date(d+'T18:00:00').toISOString(),km:0,s:dur*60,avg:0,max:0,hr:[],z:null,el:0,te:0,m:1,rpe:+$('#mrpe').value};
+  mdate=d;mt2=ty;mdur=dur;mrpe=a.rpe;
+  acts=acts.filter(x=>!(x.m&&x.d==a.d&&x.t==a.t));acts.push(a);acts.sort((x,y)=>new Date(y.d)-new Date(x.d));sel=acts.indexOf(a);persistActs();render();
+ }else if(b.dataset.del){acts=acts.filter(a=>!(a.m&&a.d==b.dataset.del));sel=0;persistActs();render()}
+});
+
+$('#bkdel').onclick=()=>{
+ if(!confirm('Alle in diesem Browser gespeicherten Daten löschen? Das lässt sich nicht rückgängig machen. Mach vorher eine Sicherung, wenn du sie noch brauchst.'))return;
+ try{localStorage.clear();indexedDB.deleteDatabase('gd')}catch(e){}
+ location.reload();
 };
+$('#planbtn').onclick=plan;
+$('#diary').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.tag){const t=b.dataset.tag,c=tags[dsel]||[];tags[dsel]=c.includes(t)?c.filter(x=>x!=t):[...c,t];if(!tags[dsel].length)delete tags[dsel];saveTags();renderDiary()}
+ else if(b.id=='dadd'){const t=$('#dnew').value.trim().slice(0,30);if(t){const c=tags[dsel]||[];if(!c.includes(t))tags[dsel]=[...c,t];saveTags();renderDiary()}}
+});
+$('#diary').addEventListener('change',e=>{if(e.target.id=='ddate'&&e.target.value){dsel=e.target.value;renderDiary()}});
+$('#goalt').addEventListener('change',e=>{if(e.target.id=='gk')G.tk=e.target.value;if(e.target.id=='gt')G.ts=pt(e.target.value);try{localStorage.setItem('goals',JSON.stringify(G))}catch(x){}renderGoalT()});
+
+
+const SEA=[['auto','Auto'],['fruehling','🌸 Frühling'],['sommer','☀️ Sommer'],['herbst','🍂 Herbst'],['winter','❄️ Winter']];
+let sm='auto';try{sm=localStorage.getItem('sea')||'auto'}catch(e){}
+function season(){if(sm!='auto')return sm;const m=new Date().getMonth()+1;return m>=3&&m<=5?'fruehling':m>=6&&m<=8?'sommer':m>=9&&m<=11?'herbst':'winter'}
+function applySeason(){const s=season();document.documentElement.dataset.season=s;$('#seas').textContent=(sm=='auto'?'Auto: ':'')+SEA.find(x=>x[0]==s)[1]}
+$('#seas').onclick=()=>{sm=SEA[(SEA.findIndex(x=>x[0]==sm)+1)%SEA.length][0];try{localStorage.setItem('sea',sm)}catch(e){}applySeason()};
+applySeason();
+render();
+(function(){const el=document.getElementById('gd-embed');if(!el||el.textContent.trim()[0]!='{')return;
+ try{const E=JSON.parse(el.textContent),fl=[];if(E.backup)fl.push(new File([JSON.stringify(E.backup)],'embed-backup.json'));if(E.records&&E.records.length)fl.push(new File([JSON.stringify(E.records)],'embed-records.json'));if(fl.length)load(fl)}catch(e){}})();
 </script>
 </body>
 </html>
